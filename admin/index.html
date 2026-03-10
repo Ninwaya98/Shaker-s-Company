@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة التحكم — شاكر</title>
+  <link rel="stylesheet" href="../css/admin.css?v=2" />
+</head>
+<body>
+
+  <!-- ===== Login Screen ===== -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-logo">ش</div>
+      <h1>لوحة تحكم شاكر</h1>
+      <p>قم بتسجيل الدخول للمتابعة</p>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">البريد الإلكتروني</label>
+          <input type="email" id="email" placeholder="example@email.com" autocomplete="email" required />
+        </div>
+        <div class="form-group">
+          <label for="password">كلمة المرور</label>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+        <button type="submit" class="btn-primary" id="login-btn">تسجيل الدخول</button>
+        <div class="login-error" id="login-error"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== Admin App ===== -->
+  <div id="admin-app">
+
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="admin-brand">
+        لوحة تحكم شاكر
+        <small>دشاديش رجالية</small>
+      </div>
+      <button class="btn-logout" id="logout-btn">تسجيل الخروج</button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+
+      <!-- Category Tabs -->
+      <div class="admin-tabs" role="tablist">
+        <button class="tab-btn active" data-category="ready-made" role="tab" aria-selected="true">جاهز</button>
+        <button class="tab-btn" data-category="tailored" role="tab" aria-selected="false">فصال</button>
+        <button class="tab-btn" data-category="fabrics" role="tab" aria-selected="false">أقمشة</button>
+      </div>
+
+      <!-- Ready-Made Panel -->
+      <div id="panel-ready-made" class="sections-panel active" role="tabpanel">
+        <!-- Big Upload Area — always visible -->
+        <div class="quick-upload-area" id="quick-upload-ready-made">
+          <input type="file" multiple accept="image/*" id="quick-file-ready-made" />
+          <div class="upload-icon">📷</div>
+          <p class="upload-title">اضغط هنا لإضافة صور</p>
+          <p class="upload-hint">اختر صورة أو أكثر من جهازك</p>
+          <div class="upload-progress" id="quick-progress-ready-made">
+            <div class="upload-progress-bar" id="quick-bar-ready-made" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- All photos grid -->
+        <div class="photos-grid-wrap" id="photos-ready-made">
+          <div class="loading-text">جارٍ التحميل...</div>
+        </div>
+
+        <!-- Optional: Add section for organization -->
+        <details class="sections-toggle">
+          <summary>تنظيم الصور في أقسام (اختياري)</summary>
+          <div class="sections-organize">
+            <form class="add-section-form" data-category="ready-made">
+              <input type="text" placeholder="اسم القسم (مثال: صيف ٢٠٢٥)" maxlength="60" required />
+              <button type="submit" class="btn-add">+ إضافة قسم</button>
+            </form>
+            <div class="sections-list" id="list-ready-made"></div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Tailored Panel -->
+      <div id="panel-tailored" class="sections-panel" role="tabpanel">
+        <!-- Big Upload Area — always visible -->
+        <div class="quick-upload-area" id="quick-upload-tailored">
+          <input type="file" multiple accept="image/*" id="quick-file-tailored" />
+          <div class="upload-icon">📷</div>
+          <p class="upload-title">اضغط هنا لإضافة صور</p>
+          <p class="upload-hint">اختر صورة أو أكثر من جهازك</p>
+          <div class="upload-progress" id="quick-progress-tailored">
+            <div class="upload-progress-bar" id="quick-bar-tailored" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- All photos grid -->
+        <div class="photos-grid-wrap" id="photos-tailored">
+          <div class="loading-text">جارٍ التحميل...</div>
+        </div>
+
+        <!-- Optional: Add section for organization -->
+        <details class="sections-toggle">
+          <summary>تنظيم الصور في أقسام (اختياري)</summary>
+          <div class="sections-organize">
+            <form class="add-section-form" data-category="tailored">
+              <input type="text" placeholder="اسم القسم (مثال: فصال ٢٠٢٥)" maxlength="60" required />
+              <button type="submit" class="btn-add">+ إضافة قسم</button>
+            </form>
+            <div class="sections-list" id="list-tailored"></div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Fabrics Panel -->
+      <div id="panel-fabrics" class="sections-panel" role="tabpanel">
+        <!-- Big Upload Area — always visible -->
+        <div class="quick-upload-area" id="quick-upload-fabrics">
+          <input type="file" multiple accept="image/*" id="quick-file-fabrics" />
+          <div class="upload-icon">📷</div>
+          <p class="upload-title">اضغط هنا لإضافة صور</p>
+          <p class="upload-hint">اختر صورة أو أكثر من جهازك</p>
+          <div class="upload-progress" id="quick-progress-fabrics">
+            <div class="upload-progress-bar" id="quick-bar-fabrics" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- All photos grid -->
+        <div class="photos-grid-wrap" id="photos-fabrics">
+          <div class="loading-text">جارٍ التحميل...</div>
+        </div>
+
+        <!-- Optional: Add section for organization -->
+        <details class="sections-toggle">
+          <summary>تنظيم الصور في أقسام (اختياري)</summary>
+          <div class="sections-organize">
+            <form class="add-section-form" data-category="fabrics">
+              <input type="text" placeholder="اسم القسم (مثال: أقمشة ٢٠٢٥)" maxlength="60" required />
+              <button type="submit" class="btn-add">+ إضافة قسم</button>
+            </form>
+            <div class="sections-list" id="list-fabrics"></div>
+          </div>
+        </details>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Selection Side Panel -->
+  <div class="selection-panel" id="selection-panel">
+    <div class="sel-header">
+      <span class="sel-count" id="sel-count">0 صورة محددة</span>
+      <button class="sel-close" id="sel-cancel-btn">✕</button>
+    </div>
+    <div class="sel-actions">
+      <button class="sel-btn sel-btn-delete" id="sel-delete-btn">🗑️ حذف المحدد</button>
+      <div class="sel-move-group">
+        <label>نقل إلى قسم:</label>
+        <select class="sel-move-select" id="sel-move-select">
+          <option value="">اختر القسم...</option>
+        </select>
+        <button class="sel-btn sel-btn-move" id="sel-move-btn">نقل</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Scripts -->
+  <script type="module">
+    try {
+      await import('../js/admin.js?v=4');
+    } catch (err) {
+      alert('Script error: ' + err.message);
+      console.error(err);
+    }
+  </script>
+</body>
+</html>
