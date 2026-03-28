@@ -2,7 +2,7 @@
 
 ## Overview
 Arabic-language website for Shaker, a men's traditional clothing (dishdasha) tailor and retailer.
-- **Public site:** `index.html` — Hero + Gallery + Contact
+- **Public site:** `index.html` — Hero + Gallery (فصال default) + Contact
 - **Admin panel:** `admin/index.html` — Manage photos & sections (Shaker only)
 
 ## Tech Stack
@@ -14,17 +14,49 @@ Arabic-language website for Shaker, a men's traditional clothing (dishdasha) tai
 ```
 Shaker's Website/
 ├── index.html              → public gallery/contact page
+├── lining dshdsh.svg       → Illustrator dishdasha diagram (used in فصال form)
 ├── admin/
 │   └── index.html          → admin panel
 ├── css/
 │   ├── style.css           → public site styles
 │   └── admin.css           → admin panel styles
 ├── js/
-│   ├── firebase-config.js  → Firebase init (MUST update with real credentials)
-│   ├── main.js             → public gallery logic
+│   ├── firebase-config.js  → Firebase init (admin only)
+│   ├── main.js             → public gallery logic (Firestore REST API)
 │   └── admin.js            → admin: upload, sections, auth
 └── assets/
-    └── logo/               → place Shaker's logo here as logo.png
+    └── logo/               → logo-gold.png (already in place)
+```
+
+## Gallery Tabs
+Three categories, **فصال is the default active tab**:
+- `جاهز` (ready-made) — photo grid only
+- `فصال` (tailored) — measurement order form + photo gallery below
+- `أقمشة` (fabrics) — photo grid only
+
+## فصال Order Form
+The form is in `#fabric-form` inside `#cat-tailored`. It contains:
+- Dishdasha SVG diagram (`lining dshdsh.svg`) with 6 gold annotation arrows
+- 6 measurement inputs (cm): الطول الكلي، الصدر، الكتف، الياخة، طول الردن، عرض الردن
+- Notes textarea
+- WhatsApp submit button → sends Arabic-formatted message to `WA_NUMBER`
+- Fabric selection: clicking a photo in the gallery below opens the modal with "اختر هذا القماش" button; selected fabric is shown in a strip above the form
+
+### WhatsApp Message Format
+```
+طلب فصال جديد 🪡
+━━━━━━━━━━━━━━━━
+القياسات (سم):
+• الطول الكلي: ...
+• الصدر: ...
+• الكتف: ...
+• الياخة: ...
+• طول الردن: ...
+• عرض الردن: ...
+━━━━━━━━━━━━━━━━
+القماش المختار: [url or "لم يُحدد"]
+━━━━━━━━━━━━━━━━
+ملاحظات: [text or "لا يوجد"]
 ```
 
 ## Setup — Do This Once
@@ -37,8 +69,8 @@ Shaker's Website/
 5. Enable **Storage**
 
 ### 2. Firebase Config
-Open `js/firebase-config.js` and replace the placeholder values with your project's real config.
-Find them at: Firebase Console → Project Settings → General → Your Apps → Firebase SDK snippet.
+`js/firebase-config.js` already has real credentials for project `shaker-s-dishdasha`.
+The public site uses the **Firestore REST API** — no SDK needed for `index.html`.
 
 ### 3. Firestore Security Rules
 ```
@@ -64,40 +96,29 @@ service firebase.storage {
 }
 ```
 
-### 5. Logo
-Place Shaker's logo at `assets/logo/logo.png`.
-Then in `index.html`, uncomment the `<img>` tag and remove the SVG placeholder.
-
-### 6. WhatsApp Number
-The WhatsApp number is set to `98647730666777` in:
+### 5. WhatsApp Number
+Set to `9647730666777` in:
 - `index.html` (contact button)
-- `js/main.js` (WA_NUMBER constant)
+- `js/main.js` (`WA_NUMBER` constant)
 
-Update both if the number changes.
-
-### 7. Social Links
-Instagram, Facebook, and TikTok links are set in `index.html` contact section:
+### 6. Social Links
 - Instagram: https://www.instagram.com/shaker.company/
 - Facebook: https://www.facebook.com/shaker.emart
 - TikTok: https://www.tiktok.com/@hajiishker
 
 ## Running Locally
 ```bash
-# Python 3
 python -m http.server 8000
-
-# Node.js (npx)
-npx serve .
 ```
 Then open: http://localhost:8000
 
-> **Note:** `js/main.js` (public site) uses the **Firestore REST API** directly — no Firebase SDK needed.
-> The admin panel (`admin/index.html`) still uses the Firebase SDK via `js/firebase-config.js`.
+> **Note:** `js/main.js` uses the **Firestore REST API** directly (no Firebase SDK).
+> The admin panel still uses the Firebase SDK via `js/firebase-config.js`.
 
 ## Design
 - Colors: Navy `#0B1C3D` + Gold `#C9A84C` + Cream `#F5F0E8`
-- RTL layout (Arabic)
-- Font: Cairo
+- RTL layout (Arabic), Font: Cairo
+- Mobile-first responsive: 2-column image grid on phones, stacked buttons, touch-friendly targets
 
 ## Firestore Schema
 ```
