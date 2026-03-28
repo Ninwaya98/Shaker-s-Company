@@ -82,7 +82,6 @@ Instagram, Facebook, and TikTok links are set in `index.html` contact section:
 - TikTok: https://www.tiktok.com/@hajiishker
 
 ## Running Locally
-Since the site uses ES modules with Firebase CDN imports, you need a local server:
 ```bash
 # Python 3
 python -m http.server 8000
@@ -91,6 +90,9 @@ python -m http.server 8000
 npx serve .
 ```
 Then open: http://localhost:8000
+
+> **Note:** `js/main.js` (public site) uses the **Firestore REST API** directly — no Firebase SDK needed.
+> The admin panel (`admin/index.html`) still uses the Firebase SDK via `js/firebase-config.js`.
 
 ## Design
 - Colors: Navy `#0B1C3D` + Gold `#C9A84C` + Cream `#F5F0E8`
