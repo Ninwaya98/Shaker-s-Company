@@ -252,6 +252,7 @@ nav a:hover {
   padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--gold);
   display: inline-block;
+  letter-spacing: 0.01em;
 }
 
 /* Image Grid */
@@ -272,8 +273,8 @@ nav a:hover {
 }
 
 .image-grid .gallery-card:hover {
-  transform: scale(1.03);
-  box-shadow: 0 8px 32px rgba(11,28,61,0.2);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 36px rgba(11,28,61,0.22);
 }
 
 .image-grid img {
@@ -590,7 +591,7 @@ nav a:hover {
   padding: 2.5rem 2rem;
   max-width: 860px;
   margin-inline: auto;
-  box-shadow: var(--shadow);
+  box-shadow: 0 8px 40px rgba(11,28,61,0.1);
 }
 
 .fabric-form-title {
@@ -830,7 +831,7 @@ nav a:hover {
   }
 
   .dishdasha-svg {
-    max-width: 180px;
+    max-width: 200px;
   }
 
   .measure-row label {
@@ -864,14 +865,24 @@ footer span {
 @media (max-width: 600px) {
   header {
     padding: 0 1rem;
+    height: 60px;
   }
 
   .header-brand .brand-sub {
     display: none;
   }
 
+  .header-brand img {
+    height: 36px;
+    width: 36px;
+  }
+
+  .header-brand .brand-name {
+    font-size: 1.1rem;
+  }
+
   nav {
-    gap: 1.2rem;
+    gap: 1rem;
   }
 
   nav a {
@@ -879,29 +890,125 @@ footer span {
   }
 
   #hero {
-    min-height: 360px;
-    padding: 3rem 1rem;
-  }
-
-  #gallery {
+    min-height: 320px;
     padding: 2.5rem 1rem;
   }
 
+  #gallery {
+    padding: 2rem 0.75rem;
+  }
+
+  #gallery h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .category-toggle {
+    padding: 4px;
+    margin-bottom: 1.75rem;
+  }
+
+  .toggle-btn {
+    padding: 0.55rem 1.2rem;
+    font-size: 0.9rem;
+    min-height: 44px;
+  }
+
   .image-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
   .image-grid .gallery-card {
-    border-radius: 6px;
+    border-radius: 8px;
+  }
+
+  .gallery-section h3 {
+    font-size: 1.1rem;
+  }
+
+  #fabric-form {
+    padding: 1.5rem 1rem;
+    border-radius: 10px;
+  }
+
+  .fabric-form-title {
+    font-size: 1.2rem;
+  }
+
+  .fabric-form-sub {
+    font-size: 0.88rem;
+  }
+
+  .measure-row label {
+    width: 72px;
+    font-size: 0.85rem;
+  }
+
+  .measure-input {
+    max-width: unset;
+    font-size: 1rem;
+    padding: 0.65rem 0.5rem;
+  }
+
+  #order-whatsapp-btn {
+    font-size: 1rem;
+    padding: 0.85rem 1.5rem;
+    min-height: 52px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .modal-btn-whatsapp,
+  .modal-btn-select-fabric,
+  .modal-btn-cancel {
+    text-align: center;
+    justify-content: center;
+    min-height: 48px;
   }
 
   #contact {
-    padding: 3rem 1rem;
+    padding: 2.5rem 1rem;
+  }
+
+  #contact h2 {
+    font-size: 1.5rem;
   }
 
   .contact-buttons {
     flex-direction: column;
     align-items: center;
+    gap: 0.75rem;
+  }
+
+  .btn-whatsapp,
+  .btn-phone,
+  .btn-instagram,
+  .btn-facebook,
+  .btn-tiktok {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+    min-height: 52px;
+  }
+}
+
+@media (max-width: 380px) {
+  .image-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .toggle-btn {
+    padding: 0.5rem 0.9rem;
+    font-size: 0.82rem;
+  }
+
+  .dishdasha-svg {
+    max-width: 160px;
   }
 }
