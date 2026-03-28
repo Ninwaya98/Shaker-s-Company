@@ -42,23 +42,154 @@
 
     <!-- Category Toggle -->
     <div class="category-toggle" role="tablist" aria-label="تصفية المعرض">
-      <button class="toggle-btn active" data-category="ready-made" role="tab" aria-selected="true">جاهز</button>
-      <button class="toggle-btn" data-category="tailored" role="tab" aria-selected="false">فصال</button>
+      <button class="toggle-btn" data-category="ready-made" role="tab" aria-selected="false">جاهز</button>
+      <button class="toggle-btn active" data-category="tailored" role="tab" aria-selected="true">فصال</button>
       <button class="toggle-btn" data-category="fabrics" role="tab" aria-selected="false">أقمشة</button>
     </div>
 
     <!-- Ready-Made Category -->
-    <div id="cat-ready-made" class="gallery-category active" role="tabpanel">
+    <div id="cat-ready-made" class="gallery-category" role="tabpanel">
       <div id="sections-ready-made">
         <div class="spinner"></div>
       </div>
     </div>
 
     <!-- Tailored Category -->
-    <div id="cat-tailored" class="gallery-category" role="tabpanel">
+    <div id="cat-tailored" class="gallery-category active" role="tabpanel">
+
+      <!-- ===== Order Form ===== -->
+      <div id="fabric-form">
+        <h3 class="fabric-form-title">اطلب دشداشتك المفصّلة</h3>
+        <p class="fabric-form-sub">أدخل قياساتك، ثم اختر قماشاً من المعرض أدناه، وأرسل طلبك عبر واتساب</p>
+
+        <!-- Selected fabric strip -->
+        <div id="selected-fabric-strip" style="display:none">
+          <img id="selected-fabric-thumb" src="" alt="القماش المختار" />
+          <span id="selected-fabric-label"></span>
+          <button id="clear-fabric-btn" aria-label="إلغاء الاختيار">&times;</button>
+        </div>
+
+        <div class="fabric-form-layout">
+          <!-- SVG Dishdasha Figure -->
+          <div class="dishdasha-svg-wrap">
+            <svg class="dishdasha-svg" viewBox="-55 -22 426 624" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <marker id="ae" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                  <path d="M0,1.5 L9,5 L0,8.5 Z" fill="#C9A84C"/>
+                </marker>
+                <marker id="as" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+                  <path d="M0,1.5 L9,5 L0,8.5 Z" fill="#C9A84C"/>
+                </marker>
+              </defs>
+
+              <!-- ══ YOUR ILLUSTRATOR DISHDASHA ══ -->
+              <path d="M268.55,230.17c-6.56-46.38-9.86-69.57-12-89.8-1.6-15.09-2.28-23.99-5.04-38.79-2.81-15.09-6.09-27.27-8.4-35.15-.1-.94-.43-2.68-1.68-4.53-1.23-1.82-2.76-2.88-3.64-3.4-18.11-7.27-36.23-14.53-54.34-21.8-.35-4.18-.7-8.37-1.05-12.55-2.28,2.05-14.75,12.89-31.85,11.61-10.23-.77-18.65-6.07-21.89-8.29-2.67-1.82-4.71-3.62-6.14-4.98-.34,4.74-.67,9.47-1.01,14.21-18.11,7.27-36.23,14.53-54.34,21.8-.88.52-2.41,1.59-3.64,3.4-1.25,1.85-1.58,3.58-1.68,4.53-2.31,7.88-5.59,20.06-8.4,35.15-2.76,14.8-3.44,23.71-5.04,38.79-2.14,20.23-5.44,43.42-12,89.8-1.99,14.06-3.7,25.65-4.86,33.44,6.59-.29,13.85-.35,21.66,0,8.32.37,15.96,1.13,22.84,2.09.21-2.01.42-4.03.63-6.05,3.11-29.72,6.61-59.19,10.48-88.4-1.93,25.31-4.25,50.75-6.94,76.06-2.34,76.34-8.29,152.19-13.9,228.11-1.02,13.75-1.03,27.99-1.64,41.79,11.01,2.34,22.82,4.41,35.4,6.03,22.71,2.92,43.64,3.81,62.26,3.55.02-1.11.03-2.22.05-3.33-12.2.27-25.34.06-39.28-.85-20.54-1.33-39.27-3.95-55.93-7.14,2.87-55.9,6.04-104.38,8.88-143.5,3.42-47.23,4.2-94.64,9.38-141.75.54-4.94,3.33-30.06,3.93-63.31.78-43.29-3.35-63.5-8.27-78.67-1.48-4.57-11.54-27.07-11.18-28.55.51-2.07,3.01-2.48,3.86-2.82,9.22-3.59,26.19-10.4,48.42-19.14,1.93,2.5,5.21,6.16,10.21,9.33,4.93,3.13,9.56,4.54,12.62,5.23-.75,43.02-1.5,86.03-2.25,129.05,6.08.07,12.16.15,18.25.22v-1.83c-5.7.08-11.4.16-17.1.25.77-42.56,1.55-85.13,2.32-127.69,2.06.34,4.59.59,7.47.53,2.83-.06,5.29-.41,7.31-.83v127.74c-6.08.54-12.16,1.07-18.25,1.61,10.48.11,18.25.2,18.25.22,0,0-.12,0-.12.01,0,0,.34.01,1.36,0-.02-43.27-.05-86.54-.07-129.81,2.97-.99,6.55-2.46,10.36-4.71,4.91-2.9,8.59-6.12,11.17-8.75,21.53,8.33,38.12,14.91,47.47,18.56.87.34,3.36.75,3.86,2.82.36,1.48-9.7,23.99-11.18,28.55-4.92,15.18-9.05,35.38-8.27,78.67.6,33.25,3.39,58.37,3.93,63.31,5.17,47.11,5.95,94.51,9.38,141.75,2.84,39.11,6.01,87.6,8.88,143.5-11.94,2.13-24.79,4-38.46,5.42-13,1.35-25.36,2.16-36.96,2.56-.02,1.11-.03,2.22-.05,3.33,30.57-1.14,56.95-5.15,77.96-9.58-.61-13.8-.63-28.04-1.64-41.79-5.61-75.92-11.56-151.77-13.9-228.11-2.69-25.3-5.02-50.75-6.94-76.06,3.87,29.21,7.37,58.68,10.48,88.4.21,2.02.42,4.03.63,6.05,6.87-.96,14.52-1.72,22.84-2.09,7.81-.35,15.07-.29,21.66,0-1.16-7.78-2.87-19.37-4.86-33.44ZM74.09,263.61c-6.14-.82-13.05-1.46-20.62-1.69-7.36-.22-14.13-.02-20.18.4.39-2.93.78-5.87,1.18-8.8,2.75-.2,10.14-.95,19.46-.84,9.01.11,16.37.99,21.27,1.73-.37,3.07-.74,6.13-1.11,9.2ZM79.35,91.35c8.23,25.87,7.63,44.85,7.72,49.06.14,6.45-.17,14.66-1.21,25.89-1.63,17.6-3.34,30.4-3.34,30.4-1.74,12.83-4.14,31.38-6.98,56.19-5.7-.93-14-1.86-24-1.5-7.69.28-14.37,1.25-17.01,1.8,6.62-49.48,13.23-98.96,19.85-148.45,1.35-5.84,7.13-42.79,12.81-42.84,1.85-.02,10.99,25.74,12.17,29.45ZM145.02,50.83c-3.07-.71-7.47-2.09-12.19-4.93-4.88-2.94-8.23-6.31-10.31-8.74.33-4.01.66-8.02,1-12.02,2.22,2.09,5.3,4.59,9.31,6.85,4.64,2.62,8.95,4.02,12.19,4.8v14.04ZM167.88,48.56c-9.56,4.11-18.15,3.11-21.65,2.51v-14.03c4.12.52,11.61.91,20.24-1.97,6.78-2.26,11.65-5.67,14.6-8.1.44,3.54.88,7.08,1.33,10.62-2.23,2.73-6.9,7.71-14.52,10.98ZM222.45,196.71s-1.7-12.8-3.34-30.4c-1.04-11.23-1.36-19.44-1.21-25.89.09-4.21-.51-23.19,7.72-49.06,1.18-3.71,10.32-29.47,12.17-29.45,5.68.05,11.46,37.01,12.81,42.84,6.62,49.48,13.23,98.96,19.85,148.45-2.64-.55-9.32-1.52-17.01-1.8-10-.36-18.3.57-24,1.5-2.85-24.8-5.24-43.36-6.98-56.19ZM251.48,261.92c-7.57.23-14.48.87-20.62,1.69-.37-3.07-.74-6.13-1.11-9.2,4.9-.74,12.26-1.62,21.27-1.73,9.32-.11,16.71.64,19.46.84.39,2.93.78,5.87,1.18,8.8-6.05-.42-12.82-.63-20.18-.4Z"/>
+              <path d="M151.55,18.17c13.42.21,24.11,3.39,30.85,5.97-6.16-2.75-17.01-6.63-31.02-6.8-12.7-.15-22.77,2.82-28.86,5.14,6.62-2.13,16.67-4.51,29.03-4.31Z"/>
+              <path d="M150.8,29.42c14.49.32,24.11,2,24.14,1.81.02-.19-10.58-2.41-24.3-2.64-11.61-.2-20.83,1.1-20.82,1.28.01.17,8.52-.73,20.98-.45Z"/>
+              <circle fill="none" stroke="#1a1a1a" stroke-miterlimit="10" cx="151.84" cy="44.5" r="2.61"/>
+              <circle cx="151.84" cy="44.5" r=".75"/>
+
+              <!-- ══ ANNOTATIONS ══ -->
+
+              <!-- الياخة — collar callout (above collar, no change) -->
+              <line x1="152" y1="18" x2="152" y2="-6" stroke="#C9A84C" stroke-width="1.4"/>
+              <circle cx="152" cy="18" r="2.5" fill="#C9A84C"/>
+              <text x="152" y="-13" text-anchor="middle" font-family="Cairo,sans-serif" font-size="13" font-weight="700" fill="#0B1C3D">الياخة</text>
+
+              <!-- الكتف — label moved ABOVE the arrow line -->
+              <line x1="60" y1="57" x2="245" y2="57" stroke="#C9A84C" stroke-width="1.8" marker-start="url(#as)" marker-end="url(#ae)"/>
+              <rect x="123" y="60" width="58" height="16" rx="3" fill="white" opacity="0.93"/>
+              <text x="152" y="72" text-anchor="middle" font-family="Cairo,sans-serif" font-size="13" font-weight="700" fill="#0B1C3D">الكتف</text>
+
+              <!-- الصدر — moved up more -->
+              <line x1="88" y1="125" x2="218" y2="125" stroke="#C9A84C" stroke-width="1.8" marker-start="url(#as)" marker-end="url(#ae)"/>
+              <rect x="123" y="104" width="58" height="16" rx="3" fill="white" opacity="0.93"/>
+              <text x="152" y="116" text-anchor="middle" font-family="Cairo,sans-serif" font-size="13" font-weight="700" fill="#0B1C3D">الصدر</text>
+
+              <!-- الطول الكلي — moved further left -->
+              <line x1="20" y1="18" x2="20" y2="518" stroke="#C9A84C" stroke-width="1.8" marker-start="url(#as)" marker-end="url(#ae)"/>
+              <rect x="-4" y="278" width="48" height="38" rx="3" fill="white" opacity="0.93"/>
+              <text x="20" y="293" text-anchor="middle" font-family="Cairo,sans-serif" font-size="12" font-weight="700" fill="#0B1C3D">الطول</text>
+              <text x="20" y="309" text-anchor="middle" font-family="Cairo,sans-serif" font-size="12" font-weight="700" fill="#0B1C3D">الكلي</text>
+
+              <!-- طول الردن — nudged right, bottom end more right -->
+              <line x1="254" y1="68" x2="280" y2="258" stroke="#C9A84C" stroke-width="1.8" marker-start="url(#as)" marker-end="url(#ae)"/>
+              <rect x="278" y="148" width="42" height="36" rx="3" fill="white" opacity="0.93"/>
+              <text x="299" y="162" text-anchor="middle" font-family="Cairo,sans-serif" font-size="12" font-weight="700" fill="#0B1C3D">طول</text>
+              <text x="299" y="177" text-anchor="middle" font-family="Cairo,sans-serif" font-size="12" font-weight="700" fill="#0B1C3D">الردن</text>
+
+              <!-- عرض الردن — nudged left -->
+              <line x1="233" y1="270" x2="277" y2="270" stroke="#C9A84C" stroke-width="1.8" marker-start="url(#as)" marker-end="url(#ae)"/>
+              <text x="255" y="288" text-anchor="middle" font-family="Cairo,sans-serif" font-size="11" font-weight="700" fill="#0B1C3D">عرض الردن</text>
+            </svg>
+          </div>
+
+          <!-- Measurement Inputs -->
+          <div class="measure-grid">
+            <div class="measure-row">
+              <label for="m-length">الطول الكلي</label>
+              <div class="measure-input-wrap">
+                <input type="number" id="m-length" class="measure-input" placeholder="مثال: 130" min="1" max="200" />
+                <span class="measure-unit">سم</span>
+              </div>
+            </div>
+            <div class="measure-row">
+              <label for="m-chest">الصدر</label>
+              <div class="measure-input-wrap">
+                <input type="number" id="m-chest" class="measure-input" placeholder="مثال: 110" min="1" max="200" />
+                <span class="measure-unit">سم</span>
+              </div>
+            </div>
+            <div class="measure-row">
+              <label for="m-shoulder">الكتف</label>
+              <div class="measure-input-wrap">
+                <input type="number" id="m-shoulder" class="measure-input" placeholder="مثال: 48" min="1" max="100" />
+                <span class="measure-unit">سم</span>
+              </div>
+            </div>
+            <div class="measure-row">
+              <label for="m-neck">الياخة</label>
+              <div class="measure-input-wrap">
+                <input type="number" id="m-neck" class="measure-input" placeholder="مثال: 42" min="1" max="100" />
+                <span class="measure-unit">سم</span>
+              </div>
+            </div>
+            <div class="measure-row">
+              <label for="m-sleeve-len">طول الردن</label>
+              <div class="measure-input-wrap">
+                <input type="number" id="m-sleeve-len" class="measure-input" placeholder="مثال: 65" min="1" max="120" />
+                <span class="measure-unit">سم</span>
+              </div>
+            </div>
+            <div class="measure-row">
+              <label for="m-sleeve-w">عرض الردن</label>
+              <div class="measure-input-wrap">
+                <input type="number" id="m-sleeve-w" class="measure-input" placeholder="مثال: 28" min="1" max="80" />
+                <span class="measure-unit">سم</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="measure-notes-wrap">
+          <label for="m-notes">ملاحظات إضافية</label>
+          <textarea id="m-notes" class="measure-notes" placeholder="أي تفاصيل أو طلبات خاصة..." rows="3"></textarea>
+        </div>
+
+        <!-- Submit -->
+        <button id="order-whatsapp-btn" type="button">
+          <svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+          إرسال الطلب عبر واتساب
+        </button>
+      </div>
+
+      <!-- Tailored gallery (below form — for fabric selection) -->
+      <div class="fabric-gallery-label">اختر قماشاً من المعرض (اختياري)</div>
       <div id="sections-tailored">
         <div class="spinner"></div>
       </div>
+
     </div>
 
     <!-- Fabrics Category -->
@@ -105,6 +236,9 @@
       <img class="modal-image" id="modal-image" src="" alt="" />
       <p class="modal-desc" id="modal-desc"></p>
       <div class="modal-actions">
+        <button class="modal-btn-select-fabric" id="modal-select-fabric" style="display:none">
+          ✂️ اختر هذا القماش
+        </button>
         <a class="modal-btn-whatsapp" id="modal-whatsapp" href="#" target="_blank" rel="noopener">
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
           أرسل عبر واتساب

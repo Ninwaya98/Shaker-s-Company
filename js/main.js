@@ -23,18 +23,30 @@ function field(doc, key) {
 }
 
 // ---- Modal Elements ----
-const modal      = document.getElementById('image-modal');
-const modalImage = document.getElementById('modal-image');
-const modalDesc  = document.getElementById('modal-desc');
-const modalWA    = document.getElementById('modal-whatsapp');
-const modalClose = document.getElementById('modal-close');
-const modalCancel= document.getElementById('modal-cancel');
+const modal             = document.getElementById('image-modal');
+const modalImage        = document.getElementById('modal-image');
+const modalDesc         = document.getElementById('modal-desc');
+const modalWA           = document.getElementById('modal-whatsapp');
+const modalClose        = document.getElementById('modal-close');
+const modalCancel       = document.getElementById('modal-cancel');
+const modalSelectFabric = document.getElementById('modal-select-fabric');
 
-function openModal(imgSrc, description, waLink) {
-  modalImage.src       = imgSrc;
-  modalImage.alt       = description;
-  modalDesc.textContent= description;
-  modalWA.href         = waLink;
+let currentModalData = null; // { url, label } of the image currently open in modal
+
+function openModal(imgSrc, label, waLink, category) {
+  currentModalData = { url: imgSrc, label };
+  modalImage.src        = imgSrc;
+  modalImage.alt        = label;
+  modalDesc.textContent = label;
+  modalWA.href          = waLink;
+
+  // Show "select fabric" button only for tailored category
+  if (category === 'tailored') {
+    modalSelectFabric.style.display = 'block';
+  } else {
+    modalSelectFabric.style.display = 'none';
+  }
+
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -43,6 +55,7 @@ function closeModal() {
   modal.classList.remove('open');
   document.body.style.overflow = '';
   modalImage.src = '';
+  currentModalData = null;
 }
 
 modalWA.addEventListener('click', closeModal);
@@ -52,6 +65,110 @@ modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
 });
+
+// ---- Fabric Selection ----
+let selectedFabric = null; // { url, label, cardEl }
+
+modalSelectFabric.addEventListener('click', () => {
+  if (!currentModalData) return;
+  selectFabric(currentModalData.url, currentModalData.label);
+  closeModal();
+});
+
+function selectFabric(url, label) {
+  // Remove highlight from previous selection
+  if (selectedFabric && selectedFabric.cardEl) {
+    selectedFabric.cardEl.classList.remove('fabric-selected-card');
+  }
+
+  selectedFabric = { url, label, cardEl: null };
+
+  // Highlight the matching card in the tailored gallery
+  document.querySelectorAll('#sections-tailored .gallery-card').forEach(card => {
+    const img = card.querySelector('img');
+    if (img && img.src === url) {
+      card.classList.add('fabric-selected-card');
+      selectedFabric.cardEl = card;
+    }
+  });
+
+  // Update the fabric strip UI
+  const strip = document.getElementById('selected-fabric-strip');
+  document.getElementById('selected-fabric-thumb').src = url;
+  document.getElementById('selected-fabric-label').textContent = label;
+  strip.style.display = 'flex';
+
+  // Scroll to the form
+  document.getElementById('fabric-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearFabric() {
+  if (selectedFabric && selectedFabric.cardEl) {
+    selectedFabric.cardEl.classList.remove('fabric-selected-card');
+  }
+  selectedFabric = null;
+  document.getElementById('selected-fabric-strip').style.display = 'none';
+  document.getElementById('selected-fabric-thumb').src = '';
+  document.getElementById('selected-fabric-label').textContent = '';
+}
+
+document.getElementById('clear-fabric-btn').addEventListener('click', clearFabric);
+
+// ---- Order Form ----
+const measureFields = [
+  { id: 'm-length',    label: 'الطول الكلي' },
+  { id: 'm-chest',     label: 'الصدر' },
+  { id: 'm-shoulder',  label: 'الكتف' },
+  { id: 'm-neck',      label: 'الياخة' },
+  { id: 'm-sleeve-len',label: 'طول الردن' },
+  { id: 'm-sleeve-w',  label: 'عرض الردن' }
+];
+
+function buildOrderMessage() {
+  let valid = true;
+
+  // Validate & collect measurements
+  const values = measureFields.map(f => {
+    const el = document.getElementById(f.id);
+    el.classList.remove('input-error');
+    const v = el.value.trim();
+    if (!v || Number(v) <= 0) {
+      el.classList.add('input-error');
+      // Re-trigger animation
+      void el.offsetWidth;
+      valid = false;
+      return null;
+    }
+    return { label: f.label, value: v };
+  });
+
+  if (!valid) return null;
+
+  const notes   = document.getElementById('m-notes').value.trim() || 'لا يوجد';
+  const fabric  = selectedFabric ? selectedFabric.url : 'لم يُحدد';
+
+  const lines = [
+    'طلب فصال جديد 🪡',
+    '━━━━━━━━━━━━━━━━',
+    'القياسات (سم):',
+    ...values.map(v => `• ${v.label}: ${v.value}`),
+    '━━━━━━━━━━━━━━━━',
+    `القماش المختار: ${fabric}`,
+    '━━━━━━━━━━━━━━━━',
+    `ملاحظات: ${notes}`
+  ];
+
+  return lines.join('\n');
+}
+
+function submitOrder() {
+  const msg = buildOrderMessage();
+  if (!msg) return; // validation failed
+  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank', 'noopener');
+}
+
+document.getElementById('order-whatsapp-btn').addEventListener('click', submitOrder);
 
 // ---- Category Toggle ----
 const toggleBtns = document.querySelectorAll('.toggle-btn');
@@ -118,7 +235,7 @@ async function loadCategory(category) {
         order:       Number(field(r.document, 'order') || 0)
       })).sort((a, b) => a.order - b.order);
 
-      container.appendChild(buildSectionEl(section, images));
+      container.appendChild(buildSectionEl(section, images, category));
     }
 
     if (!container.hasChildNodes()) {
@@ -131,7 +248,7 @@ async function loadCategory(category) {
   }
 }
 
-function buildSectionEl(section, images) {
+function buildSectionEl(section, images, category) {
   const wrap = document.createElement('div');
   wrap.className = 'gallery-section';
 
@@ -148,8 +265,8 @@ function buildSectionEl(section, images) {
     const waLink = `https://wa.me/${WA_NUMBER}?text=${waText}`;
 
     const card = document.createElement('div');
-    card.className  = 'gallery-card';
-    card.title      = label;
+    card.className    = 'gallery-card';
+    card.title        = label;
     card.style.cursor = 'pointer';
 
     const imgEl = document.createElement('img');
@@ -163,7 +280,7 @@ function buildSectionEl(section, images) {
     imgEl.src = img.storageUrl;
 
     card.appendChild(imgEl);
-    card.addEventListener('click', () => openModal(img.storageUrl, label, waLink));
+    card.addEventListener('click', () => openModal(img.storageUrl, label, waLink, category));
     grid.appendChild(card);
   });
 

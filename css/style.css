@@ -566,6 +566,279 @@ nav a:hover {
   color: var(--navy);
 }
 
+/* =====================
+   Fabric Order Form
+   ===================== */
+
+.fabric-gallery-label {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--gold);
+  display: inline-block;
+  width: 100%;
+}
+
+#fabric-form {
+  margin-top: 3rem;
+  background: #fff;
+  border: 2px solid var(--cream-dark);
+  border-radius: var(--radius);
+  padding: 2.5rem 2rem;
+  max-width: 860px;
+  margin-inline: auto;
+  box-shadow: var(--shadow);
+}
+
+.fabric-form-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.4rem;
+  text-align: center;
+}
+
+.fabric-form-sub {
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+  margin-bottom: 1.75rem;
+}
+
+/* Selected fabric strip */
+#selected-fabric-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--cream);
+  border: 2px solid var(--gold);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+#selected-fabric-thumb {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--gold);
+}
+
+#selected-fabric-label {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+#clear-fabric-btn {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: #999;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  transition: color var(--transition);
+}
+
+#clear-fabric-btn:hover { color: #e53935; }
+
+/* Two-column layout: SVG + inputs */
+.fabric-form-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.dishdasha-svg-wrap {
+  display: flex;
+  justify-content: center;
+}
+
+.dishdasha-svg {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  filter: drop-shadow(0 2px 8px rgba(11,28,61,0.1));
+}
+
+/* Measurement rows */
+.measure-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.measure-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.measure-row label {
+  width: 100px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--navy);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.measure-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.measure-input {
+  flex: 1;
+  padding: 0.55rem 0.75rem;
+  border: 2px solid var(--cream-dark);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 1rem;
+  color: var(--text-dark);
+  background: var(--cream);
+  transition: border-color var(--transition);
+  text-align: center;
+  direction: ltr;
+  max-width: 110px;
+}
+
+.measure-input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.measure-input.input-error {
+  border-color: #e53935;
+  animation: shake 0.3s ease;
+}
+
+.measure-unit {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #888;
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}
+
+/* Notes */
+.measure-notes-wrap {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.measure-notes-wrap label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.measure-notes {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--cream-dark);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  background: var(--cream);
+  resize: vertical;
+  transition: border-color var(--transition);
+}
+
+.measure-notes:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+/* Submit button */
+#order-whatsapp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 1.75rem;
+  width: 100%;
+  background: #25D366;
+  color: #fff;
+  font-family: 'Cairo', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.9rem 2rem;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(37,211,102,0.35);
+  transition: background var(--transition), transform var(--transition);
+}
+
+#order-whatsapp-btn:hover {
+  background: #1ebe5d;
+  transform: translateY(-2px);
+}
+
+/* Fabric selected highlight on gallery card */
+.fabric-selected-card {
+  outline: 3px solid var(--gold) !important;
+  outline-offset: 2px;
+}
+
+/* Modal: select fabric button */
+.modal-btn-select-fabric {
+  background: var(--navy);
+  color: var(--gold);
+  font-family: 'Cairo', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.75rem 1.5rem;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+  box-shadow: 0 2px 10px rgba(11,28,61,0.2);
+}
+
+.modal-btn-select-fabric:hover {
+  background: #142550;
+  transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 680px) {
+  .fabric-form-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .dishdasha-svg-wrap {
+    order: -1;
+  }
+
+  .dishdasha-svg {
+    max-width: 180px;
+  }
+
+  .measure-row label {
+    width: 80px;
+    font-size: 0.88rem;
+  }
+}
+
 /* ---- Footer ---- */
 footer {
   background: #060e1f;
