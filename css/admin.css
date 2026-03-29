@@ -876,15 +876,54 @@ img { display: block; max-width: 100%; }
   }
 }
 
-/* Responsive */
+/* iOS Safari file input fix */
+.quick-upload-area input[type="file"],
+.upload-area input[type="file"] {
+  -webkit-appearance: none;
+  font-size: 16px; /* prevents iOS zoom */
+}
+
+/* Responsive — tablet */
 @media (max-width: 700px) {
+  .admin-header {
+    padding: 0 1rem;
+    height: 56px;
+  }
+
+  .admin-brand {
+    font-size: 0.95rem;
+  }
+
+  .admin-brand small {
+    display: none;
+  }
+
+  .btn-logout {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+  }
+
   .admin-main {
     padding: 1rem;
+  }
+
+  .admin-tabs {
+    margin-bottom: 1.25rem;
+  }
+
+  .tab-btn {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
+    min-height: 44px;
   }
 
   .admin-image-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
+  }
+
+  .quick-upload-area {
+    padding: 1.75rem 1.25rem;
   }
 
   .add-section-form {
@@ -907,7 +946,7 @@ img { display: block; max-width: 100%; }
     bottom: 0;
     right: 0;
     left: 0;
-    max-height: 50vh;
+    max-height: 55vh;
     transform: translateY(100%);
     border-radius: 16px 16px 0 0;
   }
@@ -915,5 +954,46 @@ img { display: block; max-width: 100%; }
   .selection-panel.show {
     transform: translateY(0);
     visibility: visible;
+  }
+}
+
+/* Responsive — small phones */
+@media (max-width: 480px) {
+  .admin-header {
+    height: 52px;
+  }
+
+  .tab-btn {
+    padding: 0.55rem 1rem;
+    font-size: 0.88rem;
+  }
+
+  .admin-image-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .quick-upload-area {
+    padding: 1.5rem 1rem;
+    border-radius: 12px;
+  }
+
+  .quick-upload-area .upload-icon {
+    font-size: 2.25rem;
+  }
+
+  .quick-upload-area .upload-title {
+    font-size: 1rem;
+  }
+
+  .btn-delete-img {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .sections-toggle summary {
+    font-size: 0.85rem;
+    padding: 0.85rem 1rem;
   }
 }
