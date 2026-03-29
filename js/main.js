@@ -1,8 +1,10 @@
 // Public Site — Gallery Logic (uses Firestore REST API)
-const API_KEY   = "AIzaSyBV3KD5Hsd06PAkRxHoRcVKSM5TFUfD4ec";
-const PROJECT   = "shaker-s-dishdasha";
-const QUERY_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents:runQuery?key=${API_KEY}`;
-const WA_NUMBER = "9647730666777";
+const API_KEY    = "AIzaSyBV3KD5Hsd06PAkRxHoRcVKSM5TFUfD4ec";
+const PROJECT    = "shaker-s-dishdasha";
+const FS_BASE    = `https://firestore.googleapis.com/v1/projects/${PROJECT}/databases/(default)/documents`;
+const QUERY_URL  = `${FS_BASE}:runQuery?key=${API_KEY}`;
+const ORDERS_URL = `${FS_BASE}/orders?key=${API_KEY}`;
+const WA_NUMBER  = "9647730666777";
 
 // ---- Firestore REST helper ----
 async function fsQuery(structuredQuery) {
@@ -161,11 +163,74 @@ function buildOrderMessage() {
   return lines.join('\n');
 }
 
-function submitOrder() {
+async function saveOrderToFirestore(measurements, fabricUrl, notes, customerName, customerPhone) {
+  try {
+    const body = {
+      fields: {
+        customerName:  { stringValue: customerName || '' },
+        customerPhone: { stringValue: customerPhone || '' },
+        measurements: { mapValue: { fields: {
+          totalLength:  { stringValue: measurements[0].value },
+          chest:        { stringValue: measurements[1].value },
+          shoulder:     { stringValue: measurements[2].value },
+          neck:         { stringValue: measurements[3].value },
+          sleeveLength: { stringValue: measurements[4].value },
+          sleeveWidth:  { stringValue: measurements[5].value },
+        }}},
+        fabricUrl:  { stringValue: fabricUrl || '' },
+        notes:      { stringValue: notes || '' },
+        status:     { stringValue: 'new' },
+        createdAt:  { timestampValue: new Date().toISOString() },
+        updatedAt:  { timestampValue: new Date().toISOString() },
+      }
+    };
+    const res = await fetch(ORDERS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) return null;
+    const doc = await res.json();
+    return doc.name.split('/').pop(); // Firestore document ID
+  } catch {
+    return null; // Silent fail — WhatsApp still opens
+  }
+}
+
+async function submitOrder() {
   const msg = buildOrderMessage();
-  if (!msg) return; // validation failed
+  if (!msg) return;
+
+  const btn = document.getElementById('order-whatsapp-btn');
+  btn.disabled = true;
+
+  // Collect customer info
+  const customerName  = document.getElementById('c-name').value.trim();
+  const customerPhone = document.getElementById('c-phone').value.trim();
+  const notes         = document.getElementById('m-notes').value.trim();
+  const fabricUrl     = selectedFabric ? selectedFabric.url : '';
+
+  // Re-collect measurements for Firestore
+  const values = measureFields.map(f => ({
+    label: f.label,
+    value: document.getElementById(f.id).value.trim()
+  }));
+
+  // Save to Firestore (non-blocking — open WhatsApp regardless)
+  const docId = await saveOrderToFirestore(values, fabricUrl, notes, customerName, customerPhone);
+
+  // Open WhatsApp
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank', 'noopener');
+
+  // Show confirmation
+  const confirmation = document.getElementById('order-confirmation');
+  const orderNum     = document.getElementById('order-confirm-num');
+  orderNum.textContent = docId ? `#${docId.slice(-6).toUpperCase()}` : '—';
+  btn.style.display = 'none';
+  confirmation.style.display = 'flex';
+
+  btn.disabled = false;
 }
 
 document.getElementById('order-whatsapp-btn').addEventListener('click', submitOrder);

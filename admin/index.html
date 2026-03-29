@@ -50,6 +50,7 @@
         <button class="tab-btn active" data-category="ready-made" role="tab" aria-selected="true">جاهز</button>
         <button class="tab-btn" data-category="tailored" role="tab" aria-selected="false">فصال</button>
         <button class="tab-btn" data-category="fabrics" role="tab" aria-selected="false">أقمشة</button>
+        <button class="tab-btn tab-btn-orders" data-tab="orders" role="tab" aria-selected="false">🧾 الطلبات</button>
       </div>
 
       <!-- Ready-Made Panel -->
@@ -186,7 +187,62 @@
         </details>
       </div>
 
+      <!-- ===== Orders Panel ===== -->
+      <div id="panel-orders" class="sections-panel" role="tabpanel">
+
+        <!-- Sub-nav -->
+        <div class="orders-subnav">
+          <button class="orders-subnav-btn active" data-view="pipeline">📋 الطلبات</button>
+          <button class="orders-subnav-btn" data-view="customers">👤 العملاء</button>
+        </div>
+
+        <!-- Pipeline / Kanban View -->
+        <div id="orders-pipeline-view">
+          <div class="kanban-board">
+            <div class="kanban-col" data-status="new">
+              <div class="kanban-col-header">🆕 جديد</div>
+              <div class="kanban-cards" id="col-new"><div class="loading-text">جارٍ التحميل...</div></div>
+            </div>
+            <div class="kanban-col" data-status="in_progress">
+              <div class="kanban-col-header">⚙️ قيد التنفيذ</div>
+              <div class="kanban-cards" id="col-in_progress"></div>
+            </div>
+            <div class="kanban-col" data-status="ready">
+              <div class="kanban-col-header">✅ جاهز</div>
+              <div class="kanban-cards" id="col-ready"></div>
+            </div>
+            <div class="kanban-col" data-status="delivered">
+              <div class="kanban-col-header">📦 تم التسليم</div>
+              <div class="kanban-cards" id="col-delivered"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customers View -->
+        <div id="orders-customers-view" style="display:none">
+          <div class="customers-search-wrap">
+            <input type="search" id="customers-search" class="customers-search-input" placeholder="ابحث بالاسم أو رقم الهاتف..." />
+          </div>
+          <div id="customers-list"><div class="loading-text">جارٍ التحميل...</div></div>
+        </div>
+      </div>
+
     </main>
+  </div>
+
+  <!-- Order Detail Drawer -->
+  <div class="order-drawer" id="order-drawer">
+    <div class="order-drawer-overlay" id="order-drawer-overlay"></div>
+    <div class="order-drawer-panel" id="order-drawer-panel">
+      <div class="order-drawer-header">
+        <div>
+          <span class="order-drawer-id" id="order-drawer-id"></span>
+          <span class="order-drawer-date" id="order-drawer-date"></span>
+        </div>
+        <button class="order-drawer-close" id="order-drawer-close">✕</button>
+      </div>
+      <div class="order-drawer-body" id="order-drawer-body"></div>
+    </div>
   </div>
 
   <!-- Selection Action Panel -->
@@ -230,7 +286,7 @@
   <!-- Scripts -->
   <script type="module">
     try {
-      await import('../js/admin.js?v=7');
+      await import('../js/admin.js?v=8');
     } catch (err) {
       alert('Script error: ' + err.message);
       console.error(err);

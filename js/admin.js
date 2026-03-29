@@ -110,14 +110,18 @@ const panels  = document.querySelectorAll('.sections-panel');
 
 tabBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    const cat = btn.dataset.category;
     tabBtns.forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
     panels.forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
-    document.getElementById(`panel-${cat}`).classList.add('active');
-    // Clear selection when switching tabs
     clearSelection();
+
+    if (btn.dataset.tab === 'orders') {
+      document.getElementById('panel-orders').classList.add('active');
+      loadOrders();
+    } else {
+      document.getElementById(`panel-${btn.dataset.category}`).classList.add('active');
+    }
   });
 });
 
@@ -689,6 +693,344 @@ selDuplicateBtn.addEventListener('click', async () => {
   for (const cat of affectedCategories) await loadPhotos(cat);
 });
 
+
+// =====================
+// Orders — Sub-nav
+// =====================
+document.querySelectorAll('.orders-subnav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.orders-subnav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const view = btn.dataset.view;
+    document.getElementById('orders-pipeline-view').style.display  = view === 'pipeline'  ? 'block' : 'none';
+    document.getElementById('orders-customers-view').style.display = view === 'customers' ? 'block' : 'none';
+    if (view === 'customers') loadCustomers();
+  });
+});
+
+document.getElementById('customers-search').addEventListener('input', e => {
+  renderCustomers(window._allCustomers || [], e.target.value.trim());
+});
+
+// =====================
+// Load Orders
+// =====================
+const STATUS_LABELS = {
+  new: '🆕 جديد',
+  in_progress: '⚙️ قيد التنفيذ',
+  ready: '✅ جاهز',
+  delivered: '📦 تم التسليم'
+};
+
+async function loadOrders() {
+  // Clear columns
+  ['new','in_progress','ready','delivered'].forEach(s => {
+    const el = document.getElementById(`col-${s}`);
+    if (el) el.innerHTML = '<div class="loading-text">جارٍ التحميل...</div>';
+  });
+
+  try {
+    const snap = await getDocs(collection(db, 'orders'));
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const ta = a.createdAt?.seconds || 0;
+        const tb = b.createdAt?.seconds || 0;
+        return tb - ta; // newest first
+      });
+
+    ['new','in_progress','ready','delivered'].forEach(status => {
+      const col = document.getElementById(`col-${status}`);
+      if (!col) return;
+      const colOrders = orders.filter(o => (o.status || 'new') === status);
+      col.innerHTML = '';
+      if (colOrders.length === 0) {
+        col.innerHTML = '<div class="kanban-empty">لا توجد طلبات</div>';
+        return;
+      }
+      colOrders.forEach(order => col.appendChild(buildOrderCard(order)));
+    });
+
+  } catch (err) {
+    console.error('Failed to load orders:', err);
+    document.getElementById('col-new').innerHTML = '<div class="loading-text">تعذّر التحميل</div>';
+  }
+}
+
+// =====================
+// Build Order Card
+// =====================
+function buildOrderCard(order) {
+  const card = document.createElement('div');
+  card.className = 'order-card';
+
+  const shortId   = order.id.slice(-6).toUpperCase();
+  const name      = order.customerName || 'بدون اسم';
+  const phone     = order.customerPhone || '';
+  const fabricUrl = order.fabricUrl || '';
+  const m         = order.measurements || {};
+  const date      = order.createdAt?.seconds
+    ? new Date(order.createdAt.seconds * 1000).toLocaleDateString('ar-IQ', { day:'numeric', month:'short' })
+    : '';
+
+  card.innerHTML = `
+    <div class="order-card-top">
+      <span class="order-card-id">#${shortId}</span>
+      <span class="order-card-date">${date}</span>
+    </div>
+    <div class="order-card-name">${escapeHtml(name)}</div>
+    ${phone ? `<div class="order-card-phone">📱 ${escapeHtml(phone)}</div>` : ''}
+    ${fabricUrl ? `<img class="order-card-fabric" src="${fabricUrl}" alt="القماش" loading="lazy" />` : ''}
+    <div class="order-card-measurements">
+      ${m.totalLength ? `<span>الطول: ${m.totalLength}</span>` : ''}
+      ${m.chest       ? `<span>الصدر: ${m.chest}</span>` : ''}
+    </div>
+  `;
+
+  card.addEventListener('click', () => openOrderDrawer(order));
+  return card;
+}
+
+// =====================
+// Order Detail Drawer
+// =====================
+const orderDrawer        = document.getElementById('order-drawer');
+const orderDrawerOverlay = document.getElementById('order-drawer-overlay');
+const orderDrawerClose   = document.getElementById('order-drawer-close');
+const orderDrawerBody    = document.getElementById('order-drawer-body');
+const orderDrawerIdEl    = document.getElementById('order-drawer-id');
+const orderDrawerDateEl  = document.getElementById('order-drawer-date');
+
+orderDrawerOverlay.addEventListener('click', closeOrderDrawer);
+orderDrawerClose.addEventListener('click', closeOrderDrawer);
+
+function closeOrderDrawer() {
+  orderDrawer.classList.remove('open');
+}
+
+function openOrderDrawer(order) {
+  const shortId = order.id.slice(-6).toUpperCase();
+  const m       = order.measurements || {};
+  const date    = order.createdAt?.seconds
+    ? new Date(order.createdAt.seconds * 1000).toLocaleDateString('ar-IQ', { year:'numeric', month:'long', day:'numeric' })
+    : '';
+
+  orderDrawerIdEl.textContent   = `#${shortId}`;
+  orderDrawerDateEl.textContent = date;
+
+  const measureRows = [
+    { label: 'الطول الكلي', value: m.totalLength },
+    { label: 'الصدر',       value: m.chest },
+    { label: 'الكتف',       value: m.shoulder },
+    { label: 'الياخة',      value: m.neck },
+    { label: 'طول الردن',   value: m.sleeveLength },
+    { label: 'عرض الردن',   value: m.sleeveWidth },
+  ].filter(r => r.value);
+
+  const statusOptions = Object.entries(STATUS_LABELS)
+    .map(([val, label]) => `<option value="${val}" ${(order.status || 'new') === val ? 'selected' : ''}>${label}</option>`)
+    .join('');
+
+  const waLink = order.customerPhone
+    ? `https://wa.me/${order.customerPhone.replace(/\D/g,'')}?text=${encodeURIComponent(`مرحباً ${order.customerName || ''}، بخصوص طلبك #${shortId}`)}`
+    : '';
+
+  orderDrawerBody.innerHTML = `
+    ${order.customerName ? `<div class="drawer-section"><div class="drawer-label">العميل</div><div class="drawer-value drawer-name">${escapeHtml(order.customerName)}</div></div>` : ''}
+    ${order.customerPhone ? `
+      <div class="drawer-section">
+        <div class="drawer-label">رقم الهاتف</div>
+        <div class="drawer-value">
+          <a href="${waLink}" class="drawer-phone-btn" target="_blank" rel="noopener">
+            📱 ${escapeHtml(order.customerPhone)}
+          </a>
+        </div>
+      </div>` : ''}
+
+    <div class="drawer-section">
+      <div class="drawer-label">القياسات (سم)</div>
+      <div class="drawer-measurements">
+        ${measureRows.map(r => `<div class="drawer-measure-row"><span>${r.label}</span><strong>${r.value}</strong></div>`).join('')}
+      </div>
+    </div>
+
+    ${order.fabricUrl ? `
+      <div class="drawer-section">
+        <div class="drawer-label">القماش المختار</div>
+        <img class="drawer-fabric-img" src="${order.fabricUrl}" alt="القماش" />
+      </div>` : ''}
+
+    ${order.notes ? `
+      <div class="drawer-section">
+        <div class="drawer-label">ملاحظات</div>
+        <div class="drawer-value">${escapeHtml(order.notes)}</div>
+      </div>` : ''}
+
+    <div class="drawer-section">
+      <div class="drawer-label">حالة الطلب</div>
+      <select class="drawer-status-select" id="drawer-status-${order.id}">
+        ${statusOptions}
+      </select>
+      <button class="drawer-status-btn" data-id="${order.id}">حفظ الحالة</button>
+    </div>
+
+    <button class="drawer-delete-btn" data-id="${order.id}">🗑️ حذف الطلب</button>
+  `;
+
+  // Wire status save
+  orderDrawerBody.querySelector('.drawer-status-btn').addEventListener('click', async e => {
+    const id  = e.target.dataset.id;
+    const sel = document.getElementById(`drawer-status-${id}`);
+    try {
+      await updateDoc(doc(db, 'orders', id), {
+        status: sel.value,
+        updatedAt: serverTimestamp()
+      });
+      showToast('تم تحديث الحالة', 'success');
+      order.status = sel.value;
+      closeOrderDrawer();
+      loadOrders();
+    } catch (err) {
+      console.error(err);
+      showToast('تعذّر التحديث', 'error');
+    }
+  });
+
+  // Wire delete
+  orderDrawerBody.querySelector('.drawer-delete-btn').addEventListener('click', async e => {
+    if (!confirm('هل تريد حذف هذا الطلب نهائياً؟')) return;
+    try {
+      await deleteDoc(doc(db, 'orders', e.target.dataset.id));
+      showToast('تم حذف الطلب', 'success');
+      closeOrderDrawer();
+      loadOrders();
+    } catch (err) {
+      console.error(err);
+      showToast('تعذّر الحذف', 'error');
+    }
+  });
+
+  orderDrawer.classList.add('open');
+}
+
+// =====================
+// Customers
+// =====================
+async function loadCustomers() {
+  const list = document.getElementById('customers-list');
+  list.innerHTML = '<div class="loading-text">جارٍ التحميل...</div>';
+
+  try {
+    const snap = await getDocs(collection(db, 'orders'));
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Build unique customers by phone (or name if no phone)
+    const map = {};
+    orders.forEach(o => {
+      const key = o.customerPhone || o.customerName || 'unknown';
+      if (!key || key === 'unknown') return;
+      if (!map[key]) {
+        map[key] = { name: o.customerName || '', phone: o.customerPhone || '', orders: [], measurements: o.measurements };
+      }
+      map[key].orders.push(o);
+    });
+
+    const customers = Object.values(map).sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+    window._allCustomers = customers;
+    renderCustomers(customers, document.getElementById('customers-search').value.trim());
+  } catch (err) {
+    console.error(err);
+    list.innerHTML = '<div class="loading-text">تعذّر التحميل</div>';
+  }
+}
+
+function renderCustomers(customers, search = '') {
+  const list = document.getElementById('customers-list');
+  let filtered = customers;
+  if (search) {
+    const q = search.toLowerCase();
+    filtered = customers.filter(c =>
+      c.name.toLowerCase().includes(q) || c.phone.includes(q)
+    );
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="loading-text">لا يوجد عملاء مطابقون</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(customer => {
+    const row = document.createElement('div');
+    row.className = 'customer-row';
+    const orderCount = customer.orders.length;
+    const lastDate   = customer.orders.reduce((latest, o) => {
+      const t = o.createdAt?.seconds || 0;
+      return t > latest ? t : latest;
+    }, 0);
+    const lastDateStr = lastDate
+      ? new Date(lastDate * 1000).toLocaleDateString('ar-IQ', { day:'numeric', month:'short', year:'numeric' })
+      : '';
+
+    row.innerHTML = `
+      <div class="customer-row-info">
+        <div class="customer-row-name">${escapeHtml(customer.name) || 'بدون اسم'}</div>
+        ${customer.phone ? `<div class="customer-row-phone">📱 ${escapeHtml(customer.phone)}</div>` : ''}
+      </div>
+      <div class="customer-row-meta">
+        <span class="customer-orders-badge">${orderCount} ${orderCount === 1 ? 'طلب' : 'طلبات'}</span>
+        ${lastDateStr ? `<span class="customer-last-date">${lastDateStr}</span>` : ''}
+      </div>
+    `;
+
+    row.addEventListener('click', () => showCustomerOrders(customer));
+    list.appendChild(row);
+  });
+}
+
+function showCustomerOrders(customer) {
+  // Open drawer showing all orders for this customer
+  const shortName = customer.name || customer.phone || 'عميل';
+  orderDrawerIdEl.textContent   = escapeHtml(shortName);
+  orderDrawerDateEl.textContent = `${customer.orders.length} طلب`;
+
+  const waLink = customer.phone
+    ? `https://wa.me/${customer.phone.replace(/\D/g,'')}?text=${encodeURIComponent(`مرحباً ${customer.name}`)}`
+    : '';
+
+  orderDrawerBody.innerHTML = `
+    ${customer.phone ? `<div class="drawer-section"><a href="${waLink}" class="drawer-phone-btn" target="_blank">📱 تواصل عبر واتساب</a></div>` : ''}
+    <div class="drawer-section">
+      <div class="drawer-label">سجل الطلبات</div>
+      ${customer.orders.map(o => {
+        const shortId = o.id.slice(-6).toUpperCase();
+        const date    = o.createdAt?.seconds
+          ? new Date(o.createdAt.seconds * 1000).toLocaleDateString('ar-IQ', { day:'numeric', month:'short' })
+          : '';
+        return `
+          <div class="customer-order-item" data-id="${o.id}">
+            <span>#${shortId}</span><span>${STATUS_LABELS[o.status || 'new'] || ''}</span><span>${date}</span>
+          </div>`;
+      }).join('')}
+    </div>
+    ${customer.measurements ? `
+      <div class="drawer-section">
+        <div class="drawer-label">آخر قياسات مسجّلة</div>
+        <div class="drawer-measurements">
+          ${Object.entries(customer.measurements).map(([k, v]) => v ? `<div class="drawer-measure-row"><span>${k}</span><strong>${v} سم</strong></div>` : '').join('')}
+        </div>
+      </div>` : ''}
+  `;
+
+  // Tap order item → open that order's drawer
+  orderDrawerBody.querySelectorAll('.customer-order-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const o = customer.orders.find(x => x.id === el.dataset.id);
+      if (o) openOrderDrawer(o);
+    });
+  });
+
+  orderDrawer.classList.add('open');
+}
 
 // =====================
 // Utility

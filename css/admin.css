@@ -1182,7 +1182,453 @@ img { display: block; max-width: 100%; }
   }
 }
 
-/* Responsive — small phones */
+/* =====================
+   Orders Sub-nav
+   ===================== */
+.orders-subnav {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1rem 0;
+}
+
+.orders-subnav-btn {
+  padding: 0.5rem 1.2rem;
+  border: 2px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.orders-subnav-btn.active {
+  background: var(--navy);
+  color: #fff;
+  border-color: var(--navy);
+}
+
+/* =====================
+   Kanban Board
+   ===================== */
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  overflow-x: auto;
+  min-height: 400px;
+}
+
+.kanban-col {
+  background: #fff;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+}
+
+.kanban-col-header {
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-bottom: 2px solid var(--cream-dark);
+  color: var(--navy);
+  background: var(--cream);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.kanban-col[data-status="new"] .kanban-col-header     { border-bottom-color: #1976D2; }
+.kanban-col[data-status="in_progress"] .kanban-col-header { border-bottom-color: #F57C00; }
+.kanban-col[data-status="ready"] .kanban-col-header   { border-bottom-color: #388E3C; }
+.kanban-col[data-status="delivered"] .kanban-col-header { border-bottom-color: #6D4C41; }
+
+.kanban-cards {
+  flex: 1;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* =====================
+   Order Card
+   ===================== */
+.order-card {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+}
+
+.order-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 2px 8px rgba(201,168,76,0.2);
+  transform: translateY(-1px);
+}
+
+.order-card-id {
+  font-size: 0.7rem;
+  color: #888;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.order-card-date {
+  font-size: 0.7rem;
+  color: #aaa;
+  margin-bottom: 0.4rem;
+}
+
+.order-card-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.2rem;
+}
+
+.order-card-phone {
+  font-size: 0.8rem;
+  color: #555;
+  direction: ltr;
+  text-align: right;
+  margin-bottom: 0.4rem;
+}
+
+.order-card-measures {
+  font-size: 0.75rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.order-card-fabric {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  float: left;
+  margin-top: 0.25rem;
+}
+
+/* =====================
+   Order Drawer
+   ===================== */
+.order-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.order-drawer.open {
+  pointer-events: auto;
+}
+
+.order-drawer-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11,28,61,0.45);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.order-drawer.open .order-drawer-overlay {
+  opacity: 1;
+}
+
+.order-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(480px, 100vw);
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(11,28,61,0.15);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+}
+
+.order-drawer.open .order-drawer-panel {
+  transform: translateX(0);
+}
+
+.order-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--cream);
+  flex-shrink: 0;
+}
+
+.order-drawer-id {
+  display: block;
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.2rem;
+}
+
+.order-drawer-date {
+  display: block;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.order-drawer-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #888;
+  padding: 0.25rem;
+  line-height: 1;
+  transition: color var(--transition);
+}
+
+.order-drawer-close:hover {
+  color: var(--navy);
+}
+
+.order-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.drawer-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
+.drawer-customer-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.drawer-customer-phone {
+  font-size: 0.9rem;
+  color: #555;
+  direction: ltr;
+  text-align: right;
+}
+
+.drawer-measures-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.drawer-measures-table td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--cream-dark);
+}
+
+.drawer-measures-table td:first-child {
+  font-weight: 600;
+  color: var(--navy);
+  width: 50%;
+}
+
+.drawer-measures-table td:last-child {
+  color: #444;
+  direction: ltr;
+  text-align: right;
+}
+
+.drawer-fabric-img {
+  max-width: 120px;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.drawer-notes {
+  font-size: 0.88rem;
+  color: #555;
+  background: var(--cream);
+  padding: 0.75rem;
+  border-radius: 8px;
+  line-height: 1.7;
+}
+
+.drawer-status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.drawer-status-select {
+  flex: 1;
+  min-width: 160px;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.9rem;
+  color: var(--navy);
+  background: #fff;
+  cursor: pointer;
+}
+
+.drawer-save-btn {
+  padding: 0.5rem 1.2rem;
+  background: var(--navy);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.drawer-save-btn:hover {
+  background: var(--navy-light);
+}
+
+.drawer-wa-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  width: fit-content;
+}
+
+.drawer-delete-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.drawer-delete-btn:hover {
+  background: var(--danger-light);
+}
+
+/* =====================
+   Customers List
+   ===================== */
+.customers-search-wrap {
+  padding: 1rem;
+}
+
+.customers-search-input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.9rem;
+  color: var(--navy);
+  background: #fff;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.customers-search-input:focus {
+  border-color: var(--gold);
+}
+
+#customers-list {
+  padding: 0 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.customer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.customer-row:hover {
+  border-color: var(--gold);
+  box-shadow: var(--shadow);
+}
+
+.customer-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.customer-row-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--navy);
+}
+
+.customer-row-phone {
+  font-size: 0.8rem;
+  color: #666;
+  direction: ltr;
+}
+
+.customer-row-meta {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.customer-row-count {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.customer-row-date {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+/* =====================
+   Responsive — small phones */
 @media (max-width: 480px) {
   .admin-header {
     height: 52px;
@@ -1220,5 +1666,15 @@ img { display: block; max-width: 100%; }
   .sections-toggle summary {
     font-size: 0.85rem;
     padding: 0.85rem 1rem;
+  }
+
+  .kanban-board {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .order-drawer-panel {
+    width: 100vw;
   }
 }
