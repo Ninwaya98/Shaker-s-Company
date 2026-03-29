@@ -49,7 +49,11 @@ exports.handler = async (event) => {
   ];
 
   if (customerName) lines.push(`👤 الاسم: ${customerName}`);
-  if (customerPhone) lines.push(`📱 الهاتف: ${customerPhone}`);
+  if (customerPhone) {
+    lines.push(`📱 الهاتف: ${customerPhone}`);
+    const cleanPhone = customerPhone.replace(/[^0-9]/g, '');
+    lines.push(`💬 واتساب: https://wa.me/${cleanPhone}`);
+  }
 
   lines.push(
     '━━━━━━━━━━━━━━━━',
