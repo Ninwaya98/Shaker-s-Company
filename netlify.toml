@@ -1,4 +1,2 @@
-[build]
-  command = "echo done"
-  publish = "."
-  functions = "netlify/functions"
+[functions]
+  directory = "netlify/functions"
