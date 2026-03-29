@@ -219,19 +219,17 @@ async function submitOrder() {
   // Save to Firestore (non-blocking — open WhatsApp regardless)
   const docId = await saveOrderToFirestore(values, fabricUrl, notes, customerName, customerPhone);
 
-  // Fire-and-forget Telegram notification
-  if (docId) {
-    fetch('/.netlify/functions/notify-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderId: docId,
-        customerName, customerPhone,
-        measurements: values,
-        fabricUrl, notes
-      })
-    }).catch(() => {});
-  }
+  // Fire-and-forget Telegram notification (send even if Firestore save failed)
+  fetch('/.netlify/functions/notify-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      orderId: docId || 'NO-ID',
+      customerName, customerPhone,
+      measurements: values,
+      fabricUrl, notes
+    })
+  }).catch(() => {});
 
   // Open WhatsApp
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
