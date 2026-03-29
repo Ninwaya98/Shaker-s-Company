@@ -51,6 +51,7 @@ function openModal(imgSrc, label, waLink, category) {
 
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
+  modalClose.focus();
 }
 
 function closeModal() {
@@ -65,7 +66,20 @@ modalClose.addEventListener('click', closeModal);
 modalCancel.addEventListener('click', closeModal);
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+  if (!modal.classList.contains('open')) return;
+  if (e.key === 'Escape') { closeModal(); return; }
+  // Focus trap: keep Tab within modal
+  if (e.key === 'Tab') {
+    const focusable = modal.querySelectorAll('button, a[href], [tabindex]:not([tabindex="-1"])');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last  = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  }
 });
 
 // ---- Fabric Selection ----
@@ -144,7 +158,14 @@ function buildOrderMessage() {
     return { label: f.label, value: v };
   });
 
-  if (!valid) return null;
+  if (!valid) {
+    const firstError = document.querySelector('.measure-input.input-error');
+    if (firstError) {
+      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstError.focus();
+    }
+    return null;
+  }
 
   const notes   = document.getElementById('m-notes').value.trim() || 'لا يوجد';
   const fabric  = selectedFabric ? selectedFabric.url : 'لم يُحدد';
@@ -247,9 +268,30 @@ async function submitOrder() {
 
 document.getElementById('order-whatsapp-btn').addEventListener('click', submitOrder);
 
+document.getElementById('new-order-btn').addEventListener('click', () => {
+  // Reset all measurement inputs
+  measureFields.forEach(f => {
+    const el = document.getElementById(f.id);
+    el.value = '';
+    el.classList.remove('input-error');
+  });
+  // Reset notes & customer info
+  document.getElementById('m-notes').value = '';
+  document.getElementById('c-name').value = '';
+  document.getElementById('c-phone').value = '';
+  // Clear fabric selection
+  clearFabric();
+  // Show submit button, hide confirmation
+  document.getElementById('order-whatsapp-btn').style.display = 'flex';
+  document.getElementById('order-confirmation').style.display = 'none';
+  // Scroll to form
+  document.getElementById('fabric-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
 // ---- Category Toggle ----
 const toggleBtns = document.querySelectorAll('.toggle-btn');
 const categories = document.querySelectorAll('.gallery-category');
+const loadedCategories = new Set();
 
 toggleBtns.forEach(btn => {
   btn.addEventListener('click', () => {
@@ -259,6 +301,11 @@ toggleBtns.forEach(btn => {
     btn.setAttribute('aria-selected','true');
     categories.forEach(p => p.classList.remove('active'));
     document.getElementById(`cat-${cat}`).classList.add('active');
+    // Lazy-load: only fetch on first visit
+    if (!loadedCategories.has(cat)) {
+      loadedCategories.add(cat);
+      loadCategory(cat);
+    }
   });
 });
 
@@ -291,8 +338,9 @@ async function loadCategory(category) {
 
     container.innerHTML = '';
 
-    for (const section of sections) {
-      const imagesRows = await fsQuery({
+    // Fetch all section images in parallel
+    const imageResults = await Promise.all(sections.map(section =>
+      fsQuery({
         from: [{ collectionId: 'images' }],
         where: {
           fieldFilter: {
@@ -301,9 +349,12 @@ async function loadCategory(category) {
             value: { stringValue: section.id }
           }
         }
-      });
+      })
+    ));
 
-      if (!imagesRows.length) continue;
+    sections.forEach((section, i) => {
+      const imagesRows = imageResults[i];
+      if (!imagesRows.length) return;
 
       const images = imagesRows.map(r => ({
         id:          r.document.name.split('/').pop(),
@@ -313,7 +364,7 @@ async function loadCategory(category) {
       })).sort((a, b) => a.order - b.order);
 
       container.appendChild(buildSectionEl(section, images, category));
-    }
+    });
 
     if (!container.hasChildNodes()) {
       container.innerHTML = `<div class="gallery-empty">لا توجد صور حتى الآن</div>`;
@@ -345,9 +396,13 @@ function buildSectionEl(section, images, category) {
     card.className    = 'gallery-card';
     card.title        = label;
     card.style.cursor = 'pointer';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-label', label);
 
     const imgEl = document.createElement('img');
     imgEl.alt       = label;
+    imgEl.loading   = 'lazy';
     imgEl.className = 'loading';
     imgEl.onload    = () => imgEl.classList.remove('loading');
     imgEl.onerror   = () => {
@@ -357,7 +412,11 @@ function buildSectionEl(section, images, category) {
     imgEl.src = img.storageUrl;
 
     card.appendChild(imgEl);
-    card.addEventListener('click', () => openModal(img.storageUrl, label, waLink, category));
+    const openThisModal = () => openModal(img.storageUrl, label, waLink, category);
+    card.addEventListener('click', openThisModal);
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThisModal(); }
+    });
     grid.appendChild(card);
   });
 
@@ -365,7 +424,6 @@ function buildSectionEl(section, images, category) {
   return wrap;
 }
 
-// ---- Init ----
-loadCategory('ready-made');
+// ---- Init ---- (only load default active tab; others load on first click)
+loadedCategories.add('tailored');
 loadCategory('tailored');
-loadCategory('fabrics');

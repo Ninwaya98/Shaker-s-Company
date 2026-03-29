@@ -238,6 +238,12 @@ nav a:hover {
 }
 .gallery-category.active {
   display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .gallery-section {
@@ -275,6 +281,12 @@ nav a:hover {
 .image-grid .gallery-card:hover {
   transform: translateY(-4px) scale(1.02);
   box-shadow: 0 12px 36px rgba(11,28,61,0.22);
+}
+
+.image-grid .gallery-card:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+  transform: translateY(-4px) scale(1.02);
 }
 
 .image-grid img {
@@ -343,106 +355,66 @@ nav a:hover {
   margin-bottom: 2.5rem;
 }
 
-.btn-whatsapp {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: #25D366;
-  color: #fff;
-  font-family: 'Cairo', sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 0.9rem 2.2rem;
-  border-radius: 50px;
-  box-shadow: 0 4px 20px rgba(37,211,102,0.35);
-  transition: background var(--transition), transform var(--transition);
-}
-
-.btn-whatsapp:hover {
-  background: #1ebe5d;
-  transform: translateY(-2px);
-}
-
-.btn-phone {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: transparent;
-  color: var(--gold);
-  font-family: 'Cairo', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding: 0.85rem 2rem;
-  border-radius: 50px;
-  border: 2px solid var(--gold);
-  transition: background var(--transition), color var(--transition), transform var(--transition);
-}
-
-.btn-phone:hover {
-  background: var(--gold);
-  color: var(--navy);
-  transform: translateY(-2px);
-}
-
-.btn-instagram {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-  color: #fff;
-  font-family: 'Cairo', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding: 0.85rem 2rem;
-  border-radius: 50px;
-  box-shadow: 0 4px 20px rgba(220,39,67,0.3);
-  transition: opacity var(--transition), transform var(--transition);
-}
-
-.btn-instagram:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-.btn-facebook {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: #1877F2;
-  color: #fff;
-  font-family: 'Cairo', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding: 0.85rem 2rem;
-  border-radius: 50px;
-  box-shadow: 0 4px 20px rgba(24,119,242,0.3);
-  transition: opacity var(--transition), transform var(--transition);
-}
-
-.btn-facebook:hover {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
+/* Shared contact button base */
+.btn-whatsapp,
+.btn-phone,
+.btn-instagram,
+.btn-facebook,
 .btn-tiktok {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  background: #010101;
-  color: #fff;
   font-family: 'Cairo', sans-serif;
   font-size: 1.05rem;
   font-weight: 600;
   padding: 0.85rem 2rem;
   border-radius: 50px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  transition: opacity var(--transition), transform var(--transition);
+  color: #fff;
+  transition: background var(--transition), opacity var(--transition), color var(--transition), transform var(--transition);
 }
 
+.btn-whatsapp:hover,
+.btn-phone:hover,
+.btn-instagram:hover,
+.btn-facebook:hover,
 .btn-tiktok:hover {
-  opacity: 0.9;
   transform: translateY(-2px);
 }
+
+/* Per-button overrides */
+.btn-whatsapp {
+  background: #25D366;
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 0.9rem 2.2rem;
+  box-shadow: 0 4px 20px rgba(37,211,102,0.35);
+}
+.btn-whatsapp:hover { background: #1ebe5d; }
+
+.btn-phone {
+  background: transparent;
+  color: var(--gold);
+  border: 2px solid var(--gold);
+}
+.btn-phone:hover { background: var(--gold); color: var(--navy); }
+
+.btn-instagram {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  box-shadow: 0 4px 20px rgba(220,39,67,0.3);
+}
+.btn-instagram:hover { opacity: 0.9; }
+
+.btn-facebook {
+  background: #1877F2;
+  box-shadow: 0 4px 20px rgba(24,119,242,0.3);
+}
+.btn-facebook:hover { opacity: 0.9; }
+
+.btn-tiktok {
+  background: #010101;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.btn-tiktok:hover { opacity: 0.9; }
 
 /* ---- Image Preview Modal ---- */
 .modal-overlay {
@@ -795,8 +767,8 @@ nav a:hover {
 }
 
 /* Fabric selected highlight on gallery card */
-.fabric-selected-card {
-  outline: 3px solid var(--gold) !important;
+.image-grid .gallery-card.fabric-selected-card {
+  outline: 3px solid var(--gold);
   outline-offset: 2px;
 }
 
@@ -1104,6 +1076,25 @@ footer span {
 .order-confirm-note {
   font-size: 0.8rem;
   color: #666;
+}
+
+.new-order-btn {
+  margin-top: 0.75rem;
+  background: var(--navy);
+  color: var(--gold);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 0.6rem 1.75rem;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.new-order-btn:hover {
+  background: #142550;
+  transform: translateY(-2px);
 }
 
 @media (max-width: 480px) {

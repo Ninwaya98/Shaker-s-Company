@@ -137,13 +137,14 @@ async function initDashboard() {
 // Load all sections into cache
 // =====================
 async function loadSectionsCache() {
-  for (const category of ['ready-made', 'tailored', 'fabrics']) {
-    const snap = await getDocs(query(
-      collection(db, 'sections'),
-      where('category', '==', category)
-    ));
+  const cats = ['ready-made', 'tailored', 'fabrics'];
+  const snaps = await Promise.all(cats.map(cat =>
+    getDocs(query(collection(db, 'sections'), where('category', '==', cat)))
+  ));
 
-    sectionsCache[category] = snap.docs
+  for (let i = 0; i < cats.length; i++) {
+    const category = cats[i];
+    sectionsCache[category] = snaps[i].docs
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -708,8 +709,12 @@ document.querySelectorAll('.orders-subnav-btn').forEach(btn => {
   });
 });
 
+let searchTimer;
 document.getElementById('customers-search').addEventListener('input', e => {
-  renderCustomers(window._allCustomers || [], e.target.value.trim());
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    renderCustomers(window._allCustomers || [], e.target.value.trim());
+  }, 250);
 });
 
 // =====================
