@@ -471,7 +471,7 @@ async function loadPhotos(category) {
         const items = allImageItems[cat].filter(i => i.img.sectionId === sectionId);
         items.forEach(({ img, element }) => {
           if (!selectedImages.find(s => s.id === img.id)) {
-            selectedImages.push({ id: img.id, storagePath: img.storagePath, storageUrl: img.storageUrl, sectionId: img.sectionId, element, category: cat });
+            selectedImages.push({ id: img.id, storagePath: img.storagePath, storageUrl: img.storageUrl, sectionId: img.sectionId, fileName: img.fileName || '', description: img.description || '', element, category: cat });
             element.classList.add('selected');
           }
         });
@@ -532,7 +532,7 @@ document.querySelectorAll('.btn-select-all').forEach(btn => {
     const category = btn.dataset.category;
     allImageItems[category].forEach(({ img, element }) => {
       if (!selectedImages.find(s => s.id === img.id)) {
-        selectedImages.push({ id: img.id, storagePath: img.storagePath, storageUrl: img.storageUrl, sectionId: img.sectionId, element, category });
+        selectedImages.push({ id: img.id, storagePath: img.storagePath, storageUrl: img.storageUrl, sectionId: img.sectionId, fileName: img.fileName || '', description: img.description || '', element, category });
         element.classList.add('selected');
       }
     });
@@ -549,13 +549,14 @@ document.querySelectorAll('.btn-deselect-all').forEach(btn => {
 // =====================
 // Bulk Selection + Side Panel
 // =====================
-const selectionPanel = document.getElementById('selection-panel');
-const selCount       = document.getElementById('sel-count');
-const selMoveSelect  = document.getElementById('sel-move-select');
-const selMoveBtn     = document.getElementById('sel-move-btn');
-const selDeleteBtn   = document.getElementById('sel-delete-btn');
-const selCancelBtn   = document.getElementById('sel-cancel-btn');
-const selCopyBtn     = document.getElementById('sel-copy-btn');
+const selectionPanel  = document.getElementById('selection-panel');
+const selCount        = document.getElementById('sel-count');
+const selMoveSelect   = document.getElementById('sel-move-select');
+const selMoveBtn      = document.getElementById('sel-move-btn');
+const selDuplicateBtn = document.getElementById('sel-duplicate-btn');
+const selDeleteBtn    = document.getElementById('sel-delete-btn');
+const selCancelBtn    = document.getElementById('sel-cancel-btn');
+const selCopyBtn      = document.getElementById('sel-copy-btn');
 
 let selectedImages = [];
 
@@ -565,7 +566,7 @@ function toggleSelectImage(imgData, category, element) {
     selectedImages.splice(idx, 1);
     element.classList.remove('selected');
   } else {
-    selectedImages.push({ id: imgData.id, storagePath: imgData.storagePath, storageUrl: imgData.storageUrl, sectionId: imgData.sectionId, element, category });
+    selectedImages.push({ id: imgData.id, storagePath: imgData.storagePath, storageUrl: imgData.storageUrl, sectionId: imgData.sectionId, fileName: imgData.fileName || '', description: imgData.description || '', element, category });
     element.classList.add('selected');
   }
   updateSelectionPanel();
@@ -620,7 +621,7 @@ selDeleteBtn.addEventListener('click', async () => {
 // Bulk Move
 selMoveBtn.addEventListener('click', async () => {
   const newSectionId = selMoveSelect.value;
-  if (!newSectionId) { showToast('اختر القسم أولاً', 'error'); return; }
+  if (!newSectionId) { showToast('اختر القسم المستهدف أولاً', 'error'); return; }
   const category = selectedImages[0].category;
   let moved = 0;
   for (const img of selectedImages) {
@@ -632,6 +633,41 @@ selMoveBtn.addEventListener('click', async () => {
     }
   }
   showToast(`تم نقل ${moved} صورة`, 'success');
+  selectedImages = [];
+  selectionPanel.classList.remove('show');
+  await loadPhotos(category);
+});
+
+// Bulk Duplicate (copy to section — keeps original, creates new record)
+selDuplicateBtn.addEventListener('click', async () => {
+  const newSectionId = selMoveSelect.value;
+  if (!newSectionId) { showToast('اختر القسم المستهدف أولاً', 'error'); return; }
+  const category = selectedImages[0].category;
+
+  // Get current max order in target section
+  let maxOrder = 0;
+  const snap = await getDocs(query(collection(db, 'images'), where('sectionId', '==', newSectionId)));
+  snap.docs.forEach(d => { const o = d.data().order || 0; if (o > maxOrder) maxOrder = o; });
+
+  let copied = 0;
+  for (const img of selectedImages) {
+    try {
+      maxOrder++;
+      await addDoc(collection(db, 'images'), {
+        sectionId: newSectionId,
+        storageUrl: img.storageUrl,
+        storagePath: img.storagePath || '',
+        fileName: img.fileName || '',
+        description: img.description || '',
+        order: maxOrder,
+        createdAt: serverTimestamp()
+      });
+      copied++;
+    } catch (err) {
+      console.error('Failed to copy:', img.id, err);
+    }
+  }
+  showToast(`تم نسخ ${copied} صورة إلى القسم`, 'success');
   selectedImages = [];
   selectionPanel.classList.remove('show');
   await loadPhotos(category);

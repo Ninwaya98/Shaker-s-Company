@@ -189,22 +189,39 @@
     </main>
   </div>
 
-  <!-- Selection Side Panel -->
+  <!-- Selection Action Panel -->
   <div class="selection-panel" id="selection-panel">
     <div class="sel-header">
-      <span class="sel-count" id="sel-count">0 صورة محددة</span>
-      <button class="sel-close" id="sel-cancel-btn">✕</button>
-    </div>
-    <div class="sel-actions">
-      <button class="sel-btn sel-btn-delete" id="sel-delete-btn">🗑️ حذف المحدد</button>
-      <button class="sel-btn sel-btn-copy" id="sel-copy-btn">📋 نسخ الروابط</button>
-      <div class="sel-move-group">
-        <label>نقل إلى قسم:</label>
-        <select class="sel-move-select" id="sel-move-select">
-          <option value="">اختر القسم...</option>
-        </select>
-        <button class="sel-btn sel-btn-move" id="sel-move-btn">نقل</button>
+      <div class="sel-count-wrap">
+        <span class="sel-check-icon">✓</span>
+        <span class="sel-count" id="sel-count">0 صورة</span>
       </div>
+      <button class="sel-close" id="sel-cancel-btn" title="إلغاء التحديد">✕</button>
+    </div>
+
+    <div class="sel-section">
+      <div class="sel-section-title">القسم المستهدف</div>
+      <select class="sel-move-select" id="sel-move-select">
+        <option value="">اختر القسم...</option>
+      </select>
+      <div class="sel-transfer-btns">
+        <button class="sel-btn sel-btn-move" id="sel-move-btn">
+          <span class="sel-btn-icon">↕</span>
+          نقل
+        </button>
+        <button class="sel-btn sel-btn-duplicate" id="sel-duplicate-btn">
+          <span class="sel-btn-icon">⧉</span>
+          نسخ
+        </button>
+      </div>
+      <div class="sel-hint">نقل = تغيير القسم &nbsp;|&nbsp; نسخ = إضافة نسخة</div>
+    </div>
+
+    <div class="sel-divider"></div>
+
+    <div class="sel-section">
+      <button class="sel-btn sel-btn-delete" id="sel-delete-btn">🗑️ حذف الصور المحددة</button>
+      <button class="sel-btn sel-btn-copy-urls" id="sel-copy-btn">📋 نسخ الروابط</button>
     </div>
   </div>
 
@@ -214,7 +231,7 @@
   <!-- Scripts -->
   <script type="module">
     try {
-      await import('../js/admin.js?v=5');
+      await import('../js/admin.js?v=6');
     } catch (err) {
       alert('Script error: ' + err.message);
       console.error(err);
