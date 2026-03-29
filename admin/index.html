@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة التحكم — شاكر</title>
-  <link rel="stylesheet" href="../css/admin.css?v=2" />
+  <link rel="stylesheet" href="../css/admin.css?v=3" />
 </head>
 <body>
 
@@ -54,7 +54,22 @@
 
       <!-- Ready-Made Panel -->
       <div id="panel-ready-made" class="sections-panel active" role="tabpanel">
-        <!-- Big Upload Area — always visible -->
+
+        <!-- Upload Toolbar: section picker + add section -->
+        <div class="upload-toolbar">
+          <div class="upload-toolbar-row">
+            <label class="upload-toolbar-label">رفع إلى قسم:</label>
+            <select id="upload-section-ready-made" class="upload-section-select"></select>
+            <button class="btn-new-section" data-category="ready-made">+ قسم جديد</button>
+          </div>
+          <div class="add-section-inline" id="add-section-inline-ready-made">
+            <input type="text" class="inline-section-input" placeholder="اسم القسم الجديد..." maxlength="60" />
+            <button class="btn-add inline-section-save" data-category="ready-made">حفظ</button>
+            <button class="btn-cancel-inline" data-category="ready-made">إلغاء</button>
+          </div>
+        </div>
+
+        <!-- Big Upload Area -->
         <div class="quick-upload-area" id="quick-upload-ready-made">
           <input type="file" multiple accept="image/*" id="quick-file-ready-made" />
           <div class="upload-icon">📷</div>
@@ -65,19 +80,21 @@
           </div>
         </div>
 
+        <!-- Grid Toolbar -->
+        <div class="grid-toolbar" id="grid-toolbar-ready-made">
+          <button class="btn-select-all" data-category="ready-made">تحديد الكل</button>
+          <button class="btn-deselect-all" data-category="ready-made">إلغاء التحديد</button>
+        </div>
+
         <!-- All photos grid -->
         <div class="photos-grid-wrap" id="photos-ready-made">
           <div class="loading-text">جارٍ التحميل...</div>
         </div>
 
-        <!-- Optional: Add section for organization -->
+        <!-- Sections Management -->
         <details class="sections-toggle">
-          <summary>تنظيم الصور في أقسام (اختياري)</summary>
+          <summary>إدارة الأقسام</summary>
           <div class="sections-organize">
-            <form class="add-section-form" data-category="ready-made">
-              <input type="text" placeholder="اسم القسم (مثال: صيف ٢٠٢٥)" maxlength="60" required />
-              <button type="submit" class="btn-add">+ إضافة قسم</button>
-            </form>
             <div class="sections-list" id="list-ready-made"></div>
           </div>
         </details>
@@ -85,7 +102,20 @@
 
       <!-- Tailored Panel -->
       <div id="panel-tailored" class="sections-panel" role="tabpanel">
-        <!-- Big Upload Area — always visible -->
+
+        <div class="upload-toolbar">
+          <div class="upload-toolbar-row">
+            <label class="upload-toolbar-label">رفع إلى قسم:</label>
+            <select id="upload-section-tailored" class="upload-section-select"></select>
+            <button class="btn-new-section" data-category="tailored">+ قسم جديد</button>
+          </div>
+          <div class="add-section-inline" id="add-section-inline-tailored">
+            <input type="text" class="inline-section-input" placeholder="اسم القسم الجديد..." maxlength="60" />
+            <button class="btn-add inline-section-save" data-category="tailored">حفظ</button>
+            <button class="btn-cancel-inline" data-category="tailored">إلغاء</button>
+          </div>
+        </div>
+
         <div class="quick-upload-area" id="quick-upload-tailored">
           <input type="file" multiple accept="image/*" id="quick-file-tailored" />
           <div class="upload-icon">📷</div>
@@ -96,19 +126,18 @@
           </div>
         </div>
 
-        <!-- All photos grid -->
+        <div class="grid-toolbar" id="grid-toolbar-tailored">
+          <button class="btn-select-all" data-category="tailored">تحديد الكل</button>
+          <button class="btn-deselect-all" data-category="tailored">إلغاء التحديد</button>
+        </div>
+
         <div class="photos-grid-wrap" id="photos-tailored">
           <div class="loading-text">جارٍ التحميل...</div>
         </div>
 
-        <!-- Optional: Add section for organization -->
         <details class="sections-toggle">
-          <summary>تنظيم الصور في أقسام (اختياري)</summary>
+          <summary>إدارة الأقسام</summary>
           <div class="sections-organize">
-            <form class="add-section-form" data-category="tailored">
-              <input type="text" placeholder="اسم القسم (مثال: فصال ٢٠٢٥)" maxlength="60" required />
-              <button type="submit" class="btn-add">+ إضافة قسم</button>
-            </form>
             <div class="sections-list" id="list-tailored"></div>
           </div>
         </details>
@@ -116,7 +145,20 @@
 
       <!-- Fabrics Panel -->
       <div id="panel-fabrics" class="sections-panel" role="tabpanel">
-        <!-- Big Upload Area — always visible -->
+
+        <div class="upload-toolbar">
+          <div class="upload-toolbar-row">
+            <label class="upload-toolbar-label">رفع إلى قسم:</label>
+            <select id="upload-section-fabrics" class="upload-section-select"></select>
+            <button class="btn-new-section" data-category="fabrics">+ قسم جديد</button>
+          </div>
+          <div class="add-section-inline" id="add-section-inline-fabrics">
+            <input type="text" class="inline-section-input" placeholder="اسم القسم الجديد..." maxlength="60" />
+            <button class="btn-add inline-section-save" data-category="fabrics">حفظ</button>
+            <button class="btn-cancel-inline" data-category="fabrics">إلغاء</button>
+          </div>
+        </div>
+
         <div class="quick-upload-area" id="quick-upload-fabrics">
           <input type="file" multiple accept="image/*" id="quick-file-fabrics" />
           <div class="upload-icon">📷</div>
@@ -127,19 +169,18 @@
           </div>
         </div>
 
-        <!-- All photos grid -->
+        <div class="grid-toolbar" id="grid-toolbar-fabrics">
+          <button class="btn-select-all" data-category="fabrics">تحديد الكل</button>
+          <button class="btn-deselect-all" data-category="fabrics">إلغاء التحديد</button>
+        </div>
+
         <div class="photos-grid-wrap" id="photos-fabrics">
           <div class="loading-text">جارٍ التحميل...</div>
         </div>
 
-        <!-- Optional: Add section for organization -->
         <details class="sections-toggle">
-          <summary>تنظيم الصور في أقسام (اختياري)</summary>
+          <summary>إدارة الأقسام</summary>
           <div class="sections-organize">
-            <form class="add-section-form" data-category="fabrics">
-              <input type="text" placeholder="اسم القسم (مثال: أقمشة ٢٠٢٥)" maxlength="60" required />
-              <button type="submit" class="btn-add">+ إضافة قسم</button>
-            </form>
             <div class="sections-list" id="list-fabrics"></div>
           </div>
         </details>
@@ -156,6 +197,7 @@
     </div>
     <div class="sel-actions">
       <button class="sel-btn sel-btn-delete" id="sel-delete-btn">🗑️ حذف المحدد</button>
+      <button class="sel-btn sel-btn-copy" id="sel-copy-btn">📋 نسخ الروابط</button>
       <div class="sel-move-group">
         <label>نقل إلى قسم:</label>
         <select class="sel-move-select" id="sel-move-select">
@@ -172,7 +214,7 @@
   <!-- Scripts -->
   <script type="module">
     try {
-      await import('../js/admin.js?v=4');
+      await import('../js/admin.js?v=5');
     } catch (err) {
       alert('Script error: ' + err.message);
       console.error(err);

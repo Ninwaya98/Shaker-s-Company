@@ -1,4 +1,4 @@
-// Admin Panel Logic — Simplified for ease of use
+// Admin Panel Logic
 import { auth, db, storage } from './firebase-config.js';
 import {
   signInWithEmailAndPassword,
@@ -36,9 +36,11 @@ const logoutBtn   = document.getElementById('logout-btn');
 const toast       = document.getElementById('toast');
 
 // =====================
-// In-memory sections cache (reloaded from Firestore)
+// State
 // =====================
 let sectionsCache = { 'ready-made': [], 'tailored': [], 'fabrics': [] };
+// Stores all rendered image items per category for select-all
+let allImageItems = { 'ready-made': [], 'tailored': [], 'fabrics': [] };
 
 // =====================
 // Toast
@@ -114,11 +116,13 @@ tabBtns.forEach(btn => {
     btn.classList.add('active');
     btn.setAttribute('aria-selected', 'true');
     document.getElementById(`panel-${cat}`).classList.add('active');
+    // Clear selection when switching tabs
+    clearSelection();
   });
 });
 
 // =====================
-// Init Dashboard — loads sections then photos
+// Init Dashboard
 // =====================
 async function initDashboard() {
   await loadSectionsCache();
@@ -139,15 +143,10 @@ async function loadSectionsCache() {
       .map(d => ({ id: d.id, ...d.data() }))
       .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-    // Auto-create default section if none exist
     if (sectionsCache[category].length === 0) {
       const name = category === 'ready-made' ? 'دشاديش جاهزة' : category === 'tailored' ? 'دشاديش فصال' : 'أقمشة';
       const newDoc = await addDoc(collection(db, 'sections'), {
-        name,
-        category,
-        order: 1,
-        isDefault: true,
-        createdAt: serverTimestamp()
+        name, category, order: 1, isDefault: true, createdAt: serverTimestamp()
       });
       sectionsCache[category] = [{ id: newDoc.id, name, category, order: 1, isDefault: true }];
     }
@@ -155,8 +154,23 @@ async function loadSectionsCache() {
 }
 
 // =====================
-// Get default section ID for a category
+// Populate upload section dropdowns
 // =====================
+function populateUploadSectionSelect(category) {
+  const sel = document.getElementById(`upload-section-${category}`);
+  if (!sel) return;
+  const sections = sectionsCache[category];
+  sel.innerHTML = sections.map(s =>
+    `<option value="${s.id}">${escapeHtml(s.name)}${s.isDefault ? ' (رئيسي)' : ''}</option>`
+  ).join('');
+}
+
+function getUploadSectionId(category) {
+  const sel = document.getElementById(`upload-section-${category}`);
+  if (sel && sel.value) return sel.value;
+  return getDefaultSectionId(category);
+}
+
 function getDefaultSectionId(category) {
   const sections = sectionsCache[category];
   const def = sections.find(s => s.isDefault);
@@ -164,15 +178,95 @@ function getDefaultSectionId(category) {
 }
 
 // =====================
-// Render full category panel (sections list + photos)
+// Inline "add section" toolbar
+// =====================
+document.querySelectorAll('.btn-new-section').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const category = btn.dataset.category;
+    const inline = document.getElementById(`add-section-inline-${category}`);
+    inline.classList.toggle('show');
+    if (inline.classList.contains('show')) {
+      inline.querySelector('.inline-section-input').focus();
+    }
+  });
+});
+
+document.querySelectorAll('.btn-cancel-inline').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const category = btn.dataset.category;
+    const inline = document.getElementById(`add-section-inline-${category}`);
+    inline.classList.remove('show');
+    inline.querySelector('.inline-section-input').value = '';
+  });
+});
+
+document.querySelectorAll('.inline-section-save').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const category = btn.dataset.category;
+    const inline = document.getElementById(`add-section-inline-${category}`);
+    const input = inline.querySelector('.inline-section-input');
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'جارٍ الحفظ...';
+
+    try {
+      let maxOrder = 0;
+      sectionsCache[category].forEach(s => { if ((s.order || 0) > maxOrder) maxOrder = s.order; });
+
+      await addDoc(collection(db, 'sections'), {
+        name, category, order: maxOrder + 1, createdAt: serverTimestamp()
+      });
+
+      input.value = '';
+      inline.classList.remove('show');
+      showToast('تم إضافة القسم', 'success');
+
+      await loadSectionsCache();
+      populateUploadSectionSelect(category);
+      renderSectionsList(category);
+      await loadPhotos(category);
+
+      // Select the new section in the dropdown
+      const sel = document.getElementById(`upload-section-${category}`);
+      const newSection = sectionsCache[category].find(s => s.name === name);
+      if (sel && newSection) sel.value = newSection.id;
+
+    } catch (err) {
+      console.error(err);
+      showToast('حدث خطأ', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'حفظ';
+    }
+  });
+});
+
+// Allow Enter key in inline input
+document.querySelectorAll('.inline-section-input').forEach(input => {
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      input.closest('.add-section-inline').querySelector('.inline-section-save').click();
+    }
+    if (e.key === 'Escape') {
+      input.closest('.add-section-inline').querySelector('.btn-cancel-inline').click();
+    }
+  });
+});
+
+// =====================
+// Render full category panel
 // =====================
 async function renderCategory(category) {
+  populateUploadSectionSelect(category);
   renderSectionsList(category);
   await loadPhotos(category);
 }
 
 // =====================
-// Render Sections List
+// Render Sections List (in the details/summary)
 // =====================
 function renderSectionsList(category) {
   const container = document.getElementById(`list-${category}`);
@@ -194,25 +288,20 @@ function renderSectionsList(category) {
     `;
 
     row.querySelector('.section-row-delete').addEventListener('click', async () => {
-      if (section.isDefault) {
-        showToast('لا يمكن حذف القسم الرئيسي', 'error');
-        return;
-      }
+      if (section.isDefault) { showToast('لا يمكن حذف القسم الرئيسي', 'error'); return; }
       if (!confirm(`حذف قسم "${section.name}"؟ سيتم نقل صوره إلى القسم الرئيسي.`)) return;
 
       try {
         const defaultId = getDefaultSectionId(category);
-        // Move all images to default section
         const imgSnap = await getDocs(query(collection(db, 'images'), where('sectionId', '==', section.id)));
         const batch = writeBatch(db);
-        imgSnap.docs.forEach(imgDoc => {
-          batch.update(imgDoc.ref, { sectionId: defaultId });
-        });
+        imgSnap.docs.forEach(imgDoc => { batch.update(imgDoc.ref, { sectionId: defaultId }); });
         batch.delete(doc(db, 'sections', section.id));
         await batch.commit();
 
         showToast('تم حذف القسم ونقل صوره', 'success');
         await loadSectionsCache();
+        populateUploadSectionSelect(category);
         await renderCategory(category);
       } catch (err) {
         console.error(err);
@@ -225,53 +314,7 @@ function renderSectionsList(category) {
 }
 
 // =====================
-// Add Section Forms
-// =====================
-document.querySelectorAll('.add-section-form').forEach(form => {
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    const category = form.dataset.category;
-    const input    = form.querySelector('input');
-    const name     = input.value.trim();
-    if (!name) return;
-
-    const btn = form.querySelector('button');
-    btn.disabled = true;
-    btn.textContent = 'جارٍ الحفظ...';
-
-    try {
-      let maxOrder = 0;
-      sectionsCache[category].forEach(s => {
-        if ((s.order || 0) > maxOrder) maxOrder = s.order;
-      });
-
-      await addDoc(collection(db, 'sections'), {
-        name,
-        category,
-        order: maxOrder + 1,
-        createdAt: serverTimestamp()
-      });
-
-      input.value = '';
-      showToast('تم إضافة القسم', 'success');
-
-      // Reload sections and re-render
-      await loadSectionsCache();
-      renderSectionsList(category);
-      // Re-render photos so dropdowns update with new section
-      await loadPhotos(category);
-    } catch (err) {
-      console.error(err);
-      showToast('حدث خطأ', 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = '+ إضافة قسم';
-    }
-  });
-});
-
-// =====================
-// Quick Upload (Big Button)
+// Quick Upload
 // =====================
 ['ready-made', 'tailored', 'fabrics'].forEach(category => {
   const uploadArea = document.getElementById(`quick-upload-${category}`);
@@ -291,7 +334,6 @@ document.querySelectorAll('.add-section-form').forEach(form => {
 async function quickUpload(files, category) {
   if (!files || files.length === 0) return;
 
-  // Warn about large files (>5MB)
   const MAX_SIZE = 5 * 1024 * 1024;
   const largeFiles = Array.from(files).filter(f => f.size > MAX_SIZE);
   if (largeFiles.length > 0) {
@@ -301,22 +343,18 @@ async function quickUpload(files, category) {
 
   const progressWrap = document.getElementById(`quick-progress-${category}`);
   const progressBar  = document.getElementById(`quick-bar-${category}`);
-  const grid         = document.getElementById(`photos-${category}`);
 
   progressWrap.classList.add('show');
   progressBar.style.width = '0%';
 
   try {
-    const sectionId = getDefaultSectionId(category);
+    // Use selected section from dropdown
+    const sectionId = getUploadSectionId(category);
 
-    // Get current max order across ALL images in this category
     let orderCounter = 0;
     for (const sec of sectionsCache[category]) {
       const snap = await getDocs(query(collection(db, 'images'), where('sectionId', '==', sec.id)));
-      snap.docs.forEach(d => {
-        const o = d.data().order || 0;
-        if (o > orderCounter) orderCounter = o;
-      });
+      snap.docs.forEach(d => { const o = d.data().order || 0; if (o > orderCounter) orderCounter = o; });
     }
 
     const fileArr = Array.from(files);
@@ -340,17 +378,11 @@ async function quickUpload(files, category) {
             async () => {
               const url = await getDownloadURL(task.snapshot.ref);
               orderCounter++;
-
               await addDoc(collection(db, 'images'), {
-                sectionId,
-                storageUrl: url,
-                storagePath,
-                fileName: file.name,
-                description: '',
-                order: orderCounter,
+                sectionId, storageUrl: url, storagePath,
+                fileName: file.name, description: '', order: orderCounter,
                 createdAt: serverTimestamp()
               });
-
               done++;
               progressBar.style.width = `${Math.round((done / fileArr.length) * 100)}%`;
               resolve();
@@ -365,14 +397,9 @@ async function quickUpload(files, category) {
     }
 
     progressBar.style.width = '100%';
-    setTimeout(() => {
-      progressWrap.classList.remove('show');
-      progressBar.style.width = '0%';
-    }, 600);
+    setTimeout(() => { progressWrap.classList.remove('show'); progressBar.style.width = '0%'; }, 600);
 
     showToast(`تم رفع ${done} صورة بنجاح`, 'success');
-
-    // Reset file input & reload the photos grid
     document.getElementById(`quick-file-${category}`).value = '';
     await loadPhotos(category);
 
@@ -384,11 +411,12 @@ async function quickUpload(files, category) {
 }
 
 // =====================
-// Load & Render Photos (grouped by section)
+// Load & Render Photos
 // =====================
 async function loadPhotos(category) {
   const grid = document.getElementById(`photos-${category}`);
   grid.innerHTML = '<div class="loading-text">جارٍ التحميل...</div>';
+  allImageItems[category] = [];
 
   try {
     const sections = sectionsCache[category];
@@ -408,18 +436,24 @@ async function loadPhotos(category) {
         .map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-      // Section header
       const header = document.createElement('div');
       header.className = 'photo-section-header';
-      header.innerHTML = `<h3>${escapeHtml(section.name)}</h3><span class="photo-count">${images.length} صورة</span>`;
+      header.innerHTML = `
+        <h3>${escapeHtml(section.name)}</h3>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <button class="btn-select-section" data-section="${section.id}" data-category="${category}">تحديد القسم</button>
+          <span class="photo-count">${images.length} صورة</span>
+        </div>
+      `;
       grid.appendChild(header);
 
-      // Images grid
       const imgGrid = document.createElement('div');
       imgGrid.className = 'admin-image-grid';
 
       images.forEach(img => {
-        imgGrid.appendChild(buildImageItem(img, category));
+        const item = buildImageItem(img, category);
+        imgGrid.appendChild(item);
+        allImageItems[category].push({ img, element: item });
       });
 
       grid.appendChild(imgGrid);
@@ -428,6 +462,23 @@ async function loadPhotos(category) {
     if (!hasAnyImages) {
       grid.innerHTML = '<div class="loading-text">لا توجد صور. اضغط على المنطقة أعلاه لإضافة صور.</div>';
     }
+
+    // Wire up "select section" buttons
+    grid.querySelectorAll('.btn-select-section').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sectionId = btn.dataset.section;
+        const cat = btn.dataset.category;
+        const items = allImageItems[cat].filter(i => i.img.sectionId === sectionId);
+        items.forEach(({ img, element }) => {
+          if (!selectedImages.find(s => s.id === img.id)) {
+            selectedImages.push({ id: img.id, storagePath: img.storagePath, storageUrl: img.storageUrl, sectionId: img.sectionId, element, category: cat });
+            element.classList.add('selected');
+          }
+        });
+        updateSelectionPanel();
+      });
+    });
+
   } catch (err) {
     console.error(err);
     grid.innerHTML = '<div class="loading-text">تعذّر التحميل.</div>';
@@ -435,24 +486,21 @@ async function loadPhotos(category) {
 }
 
 // =====================
-// Build Image Item — simple: image + X delete button, tap to select
+// Build Image Item
 // =====================
 function buildImageItem(img, category) {
   const item = document.createElement('div');
   item.className = 'admin-image-item';
-
   item.innerHTML = `
     <img src="${img.storageUrl}" alt="${escapeHtml(img.description || img.fileName || '')}" loading="lazy" />
     <button class="btn-delete-img" title="حذف الصورة">✕</button>
   `;
 
-  // Tap image to select/deselect
   item.addEventListener('click', (e) => {
     if (e.target.closest('.btn-delete-img')) return;
     toggleSelectImage(img, category, item);
   });
 
-  // Single delete via X button
   item.querySelector('.btn-delete-img').addEventListener('click', async (e) => {
     e.stopPropagation();
     if (!confirm('هل تريد حذف هذه الصورة؟')) return;
@@ -462,6 +510,10 @@ function buildImageItem(img, category) {
       }
       await deleteDoc(doc(db, 'images', img.id));
       item.remove();
+      allImageItems[category] = allImageItems[category].filter(i => i.img.id !== img.id);
+      // Remove from selection if selected
+      const idx = selectedImages.findIndex(s => s.id === img.id);
+      if (idx >= 0) { selectedImages.splice(idx, 1); updateSelectionPanel(); }
       showToast('تم حذف الصورة', 'success');
     } catch (err) {
       console.error(err);
@@ -473,6 +525,28 @@ function buildImageItem(img, category) {
 }
 
 // =====================
+// Select All / Deselect All
+// =====================
+document.querySelectorAll('.btn-select-all').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const category = btn.dataset.category;
+    allImageItems[category].forEach(({ img, element }) => {
+      if (!selectedImages.find(s => s.id === img.id)) {
+        selectedImages.push({ id: img.id, storagePath: img.storagePath, storageUrl: img.storageUrl, sectionId: img.sectionId, element, category });
+        element.classList.add('selected');
+      }
+    });
+    updateSelectionPanel();
+  });
+});
+
+document.querySelectorAll('.btn-deselect-all').forEach(btn => {
+  btn.addEventListener('click', () => {
+    clearSelection();
+  });
+});
+
+// =====================
 // Bulk Selection + Side Panel
 // =====================
 const selectionPanel = document.getElementById('selection-panel');
@@ -481,6 +555,7 @@ const selMoveSelect  = document.getElementById('sel-move-select');
 const selMoveBtn     = document.getElementById('sel-move-btn');
 const selDeleteBtn   = document.getElementById('sel-delete-btn');
 const selCancelBtn   = document.getElementById('sel-cancel-btn');
+const selCopyBtn     = document.getElementById('sel-copy-btn');
 
 let selectedImages = [];
 
@@ -490,7 +565,7 @@ function toggleSelectImage(imgData, category, element) {
     selectedImages.splice(idx, 1);
     element.classList.remove('selected');
   } else {
-    selectedImages.push({ id: imgData.id, storagePath: imgData.storagePath, sectionId: imgData.sectionId, element, category });
+    selectedImages.push({ id: imgData.id, storagePath: imgData.storagePath, storageUrl: imgData.storageUrl, sectionId: imgData.sectionId, element, category });
     element.classList.add('selected');
   }
   updateSelectionPanel();
@@ -545,10 +620,7 @@ selDeleteBtn.addEventListener('click', async () => {
 // Bulk Move
 selMoveBtn.addEventListener('click', async () => {
   const newSectionId = selMoveSelect.value;
-  if (!newSectionId) {
-    showToast('اختر القسم أولاً', 'error');
-    return;
-  }
+  if (!newSectionId) { showToast('اختر القسم أولاً', 'error'); return; }
   const category = selectedImages[0].category;
   let moved = 0;
   for (const img of selectedImages) {
@@ -563,6 +635,26 @@ selMoveBtn.addEventListener('click', async () => {
   selectedImages = [];
   selectionPanel.classList.remove('show');
   await loadPhotos(category);
+});
+
+// Copy URLs
+selCopyBtn.addEventListener('click', async () => {
+  const urls = selectedImages.map(img => img.storageUrl).join('\n');
+  try {
+    await navigator.clipboard.writeText(urls);
+    showToast(`تم نسخ ${selectedImages.length} رابط`, 'success');
+  } catch (err) {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = urls;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    showToast(`تم نسخ ${selectedImages.length} رابط`, 'success');
+  }
 });
 
 // =====================

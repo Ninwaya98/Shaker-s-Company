@@ -869,6 +869,178 @@ img { display: block; max-width: 100%; }
   color: #fff;
 }
 
+/* =====================
+   Upload Toolbar
+   ===================== */
+.upload-toolbar {
+  background: #fff;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: var(--radius);
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.upload-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.upload-toolbar-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.upload-section-select {
+  flex: 1;
+  min-width: 140px;
+  background: var(--cream);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.95rem;
+  color: var(--navy);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  direction: rtl;
+  outline: none;
+}
+
+.upload-section-select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+
+.btn-new-section {
+  background: transparent;
+  border: 1.5px dashed var(--gold);
+  color: var(--gold);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition), color var(--transition);
+}
+
+.btn-new-section:hover {
+  background: var(--gold);
+  color: var(--navy);
+}
+
+/* Inline add section form */
+.add-section-inline {
+  display: none;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.add-section-inline.show {
+  display: flex;
+}
+
+.inline-section-input {
+  flex: 1;
+  min-width: 140px;
+  padding: 0.5rem 0.85rem;
+  border: 1.5px solid var(--gold);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.95rem;
+  color: var(--navy);
+  outline: none;
+}
+
+.btn-cancel-inline {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: #888;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.btn-cancel-inline:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* =====================
+   Grid Toolbar
+   ===================== */
+.grid-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-select-all,
+.btn-deselect-all {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: #888;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition), background var(--transition);
+}
+
+.btn-select-all:hover {
+  border-color: var(--gold);
+  color: var(--navy);
+  background: rgba(201,168,76,0.08);
+}
+
+.btn-deselect-all:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(229,57,53,0.06);
+}
+
+/* Select section button (in photo section headers) */
+.btn-select-section {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: #999;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.btn-select-section:hover {
+  border-color: var(--gold);
+  color: var(--navy);
+}
+
+/* Copy button in selection panel */
+.sel-btn-copy {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.25);
+}
+
+.sel-btn-copy:hover {
+  background: rgba(255,255,255,0.22);
+}
+
 /* Touch devices — always show delete button */
 @media (hover: none), (pointer: coarse) {
   .btn-delete-img {
