@@ -556,7 +556,6 @@ const selMoveBtn      = document.getElementById('sel-move-btn');
 const selDuplicateBtn = document.getElementById('sel-duplicate-btn');
 const selDeleteBtn    = document.getElementById('sel-delete-btn');
 const selCancelBtn    = document.getElementById('sel-cancel-btn');
-const selCopyBtn      = document.getElementById('sel-copy-btn');
 
 let selectedImages = [];
 
@@ -580,12 +579,22 @@ function updateSelectionPanel() {
   selectionPanel.classList.add('show');
   selCount.textContent = `${selectedImages.length} صورة محددة`;
 
-  const category = selectedImages[0].category;
-  const sections = sectionsCache[category] || [];
+  // Show ALL sections across all categories, grouped
+  const catLabels = { 'ready-made': 'جاهز', 'tailored': 'فصال', 'fabrics': 'أقمشة' };
   selMoveSelect.innerHTML = '<option value="">اختر القسم...</option>';
-  sections.forEach(s => {
-    selMoveSelect.innerHTML += `<option value="${s.id}">${escapeHtml(s.name)}</option>`;
-  });
+  for (const cat of ['ready-made', 'tailored', 'fabrics']) {
+    const sections = sectionsCache[cat] || [];
+    if (sections.length === 0) continue;
+    const group = document.createElement('optgroup');
+    group.label = `── ${catLabels[cat]} ──`;
+    sections.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = `${s.id}|${cat}`;
+      opt.textContent = escapeHtml(s.name);
+      group.appendChild(opt);
+    });
+    selMoveSelect.appendChild(group);
+  }
 }
 
 function clearSelection() {
@@ -618,11 +627,17 @@ selDeleteBtn.addEventListener('click', async () => {
   await loadPhotos(category);
 });
 
+// Parse "sectionId|category" from select value
+function parseSelectValue(val) {
+  const [sectionId, cat] = val.split('|');
+  return { sectionId, cat };
+}
+
 // Bulk Move
 selMoveBtn.addEventListener('click', async () => {
-  const newSectionId = selMoveSelect.value;
-  if (!newSectionId) { showToast('اختر القسم المستهدف أولاً', 'error'); return; }
-  const category = selectedImages[0].category;
+  if (!selMoveSelect.value) { showToast('اختر القسم المستهدف أولاً', 'error'); return; }
+  const { sectionId: newSectionId, cat: targetCat } = parseSelectValue(selMoveSelect.value);
+  const sourceCategory = selectedImages[0].category;
   let moved = 0;
   for (const img of selectedImages) {
     try {
@@ -633,18 +648,18 @@ selMoveBtn.addEventListener('click', async () => {
     }
   }
   showToast(`تم نقل ${moved} صورة`, 'success');
+  const affectedCategories = new Set([sourceCategory, targetCat]);
   selectedImages = [];
   selectionPanel.classList.remove('show');
-  await loadPhotos(category);
+  for (const cat of affectedCategories) await loadPhotos(cat);
 });
 
-// Bulk Duplicate (copy to section — keeps original, creates new record)
+// Bulk Duplicate (copy to section — keeps original, creates new Firestore record)
 selDuplicateBtn.addEventListener('click', async () => {
-  const newSectionId = selMoveSelect.value;
-  if (!newSectionId) { showToast('اختر القسم المستهدف أولاً', 'error'); return; }
-  const category = selectedImages[0].category;
+  if (!selMoveSelect.value) { showToast('اختر القسم المستهدف أولاً', 'error'); return; }
+  const { sectionId: newSectionId, cat: targetCat } = parseSelectValue(selMoveSelect.value);
+  const sourceCategory = selectedImages[0].category;
 
-  // Get current max order in target section
   let maxOrder = 0;
   const snap = await getDocs(query(collection(db, 'images'), where('sectionId', '==', newSectionId)));
   snap.docs.forEach(d => { const o = d.data().order || 0; if (o > maxOrder) maxOrder = o; });
@@ -668,30 +683,12 @@ selDuplicateBtn.addEventListener('click', async () => {
     }
   }
   showToast(`تم نسخ ${copied} صورة إلى القسم`, 'success');
+  const affectedCategories = new Set([sourceCategory, targetCat]);
   selectedImages = [];
   selectionPanel.classList.remove('show');
-  await loadPhotos(category);
+  for (const cat of affectedCategories) await loadPhotos(cat);
 });
 
-// Copy URLs
-selCopyBtn.addEventListener('click', async () => {
-  const urls = selectedImages.map(img => img.storageUrl).join('\n');
-  try {
-    await navigator.clipboard.writeText(urls);
-    showToast(`تم نسخ ${selectedImages.length} رابط`, 'success');
-  } catch (err) {
-    // Fallback
-    const ta = document.createElement('textarea');
-    ta.value = urls;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    ta.remove();
-    showToast(`تم نسخ ${selectedImages.length} رابط`, 'success');
-  }
-});
 
 // =====================
 // Utility
