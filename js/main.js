@@ -304,7 +304,10 @@ async function submitOrder() {
       orderId: docId || 'NO-ID',
       customerName, customerPhone,
       measurements: values,
-      fabricUrl, notes
+      fabricUrl, notes,
+      collarType: selectedCollar || '',
+      pocketType: selectedPocket || '',
+      siteUrl: window.location.origin
     })
   }).catch(() => {});
 

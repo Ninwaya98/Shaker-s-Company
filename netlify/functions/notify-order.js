@@ -26,7 +26,10 @@ exports.handler = async (event) => {
     customerPhone = '',
     measurements = [],
     fabricUrl = '',
-    notes = ''
+    notes = '',
+    collarType = '',
+    pocketType = '',
+    siteUrl = ''
   } = data;
 
   const shortId = orderId ? `#${orderId.slice(-6).toUpperCase()}` : '#—';
@@ -62,6 +65,21 @@ exports.handler = async (event) => {
     '━━━━━━━━━━━━━━━━'
   );
 
+  // Collar & Pocket SVG filenames (some have spaces in them)
+  const collarFiles = { '1': 'neck1.svg', '2': 'neck 2.svg', '3': 'neck 3.svg', '4': 'neck4.svg', '5': 'neck5.svg' };
+  const pocketFiles = { '1': 'pocket1.svg', '2': 'pocket2.svg', '3': 'pocket 3.svg', '4': 'pocket 4.svg' };
+
+  if (collarType) {
+    const file = collarFiles[collarType];
+    const imgUrl = siteUrl && file ? `${siteUrl}/assets/${encodeURIComponent(file)}` : '';
+    lines.push(`👔 نوع الياخة: ياخة ${collarType}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+  }
+  if (pocketType) {
+    const file = pocketFiles[pocketType];
+    const imgUrl = siteUrl && file ? `${siteUrl}/assets/${encodeURIComponent(file)}` : '';
+    lines.push(`🧥 نوع الجيب: جيب ${pocketType}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+  }
+
   if (fabricUrl) lines.push(`🧵 القماش: ${fabricUrl}`);
   if (notes) lines.push(`📝 ملاحظات: ${notes}`);
 
@@ -74,7 +92,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         chat_id: CHAT_ID,
         text,
-        disable_web_page_preview: true
+        disable_web_page_preview: false
       })
     });
 
