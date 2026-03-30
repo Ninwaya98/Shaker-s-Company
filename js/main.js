@@ -24,6 +24,12 @@ function field(doc, key) {
   return f.stringValue ?? f.integerValue ?? f.doubleValue ?? '';
 }
 
+function fieldArray(doc, key) {
+  const f = doc.fields?.[key];
+  if (!f || !f.arrayValue || !f.arrayValue.values) return [];
+  return f.arrayValue.values.map(v => v.stringValue || '');
+}
+
 // ---- Modal Elements ----
 const modal             = document.getElementById('image-modal');
 const modalImage        = document.getElementById('modal-image');
@@ -32,23 +38,68 @@ const modalWA           = document.getElementById('modal-whatsapp');
 const modalClose        = document.getElementById('modal-close');
 const modalCancel       = document.getElementById('modal-cancel');
 const modalSelectFabric = document.getElementById('modal-select-fabric');
+const modalRmOrder      = document.getElementById('modal-readymade-order');
+const modalRmPrice      = document.getElementById('modal-rm-price');
+const modalRmSize       = document.getElementById('modal-rm-size');
+const modalRmColor      = document.getElementById('modal-rm-color');
+const modalRmName       = document.getElementById('modal-rm-name');
+const modalRmPhone      = document.getElementById('modal-rm-phone');
+const modalRmError      = document.getElementById('modal-rm-error');
+const modalRmSubmit     = document.getElementById('modal-rm-submit');
+const modalRmConfirm    = document.getElementById('modal-rm-confirmation');
 
-let currentModalData = null; // { url, label } of the image currently open in modal
+let currentModalData = null;
 
-function openModal(imgSrc, label, waLink, category, price = 0) {
-  currentModalData = { url: imgSrc, label, price };
+function openModal(imgSrc, label, waLink, category, price = 0, itemData = null) {
+  currentModalData = { url: imgSrc, label, price, category, itemData };
   modalImage.src        = imgSrc;
   modalImage.alt        = label;
   modalDesc.textContent = label;
   modalWA.href          = waLink;
 
+  // Hide all action variants
+  modalSelectFabric.style.display = 'none';
+  modalWA.style.display = 'none';
+  modalRmOrder.style.display = 'none';
+  document.querySelector('.modal-actions').style.display = '';
+
   if (category === 'tailored') {
-    // Tailored: show select fabric + cancel, hide WhatsApp
     modalSelectFabric.style.display = 'inline-flex';
-    modalWA.style.display = 'none';
+  } else if (category === 'ready-made' && itemData) {
+    document.querySelector('.modal-actions').style.display = 'none';
+    modalRmOrder.style.display = 'block';
+    // Populate price
+    modalRmPrice.textContent = price > 0 ? `${price.toLocaleString()} د.ع` : '';
+    modalRmPrice.style.display = price > 0 ? '' : 'none';
+    // Populate size dropdown
+    modalRmSize.innerHTML = '<option value="">اختر المقاس</option>';
+    (itemData.sizes || []).forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s; opt.textContent = s;
+      modalRmSize.appendChild(opt);
+    });
+    // Populate color dropdown
+    modalRmColor.innerHTML = '<option value="">اختر اللون</option>';
+    (itemData.colors || []).forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      modalRmColor.appendChild(opt);
+    });
+    // Reset form state
+    modalRmName.value = '';
+    modalRmPhone.value = '';
+    modalRmError.style.display = 'none';
+    modalRmSubmit.style.display = '';
+    modalRmConfirm.style.display = 'none';
+    // Disable if out of stock
+    if (itemData.quantity <= 0) {
+      modalRmSubmit.disabled = true;
+      modalRmSubmit.textContent = 'نفذت الكمية';
+    } else {
+      modalRmSubmit.disabled = false;
+      modalRmSubmit.textContent = 'أرسل الطلب';
+    }
   } else {
-    // Fabrics / ready-made: show WhatsApp + cancel, hide select fabric
-    modalSelectFabric.style.display = 'none';
     modalWA.style.display = 'inline-flex';
   }
 
@@ -62,6 +113,11 @@ function closeModal() {
   document.body.style.overflow = '';
   modalImage.src = '';
   currentModalData = null;
+  // Reset ready-made form
+  modalRmOrder.style.display = 'none';
+  modalRmError.style.display = 'none';
+  document.querySelectorAll('.rm-field').forEach(f => f.classList.remove('input-error'));
+  document.querySelector('.modal-actions').style.display = '';
 }
 
 modalWA.addEventListener('click', closeModal);
@@ -228,6 +284,7 @@ async function saveOrderToFirestore(measurements, fabricUrl, notes, customerName
   try {
     const body = {
       fields: {
+        orderType:     { stringValue: 'tailored' },
         customerName:  { stringValue: customerName || '' },
         customerPhone: { stringValue: customerPhone || '' },
         measurements: { mapValue: { fields: {
@@ -355,6 +412,7 @@ async function submitOrder() {
   const docId = await saveOrderToFirestore(values, fabricUrl, notes, customerName, customerPhone);
 
   const orderPayload = {
+    orderType: 'tailored',
     orderId: docId || 'NO-ID',
     customerName, customerPhone,
     measurements: values,
@@ -437,6 +495,124 @@ document.getElementById('new-order-btn').addEventListener('click', () => {
   document.getElementById('fabric-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
+// ---- Ready-Made Order Submission ----
+modalRmSubmit.addEventListener('click', submitReadymadeOrder);
+
+async function submitReadymadeOrder() {
+  const missing = [];
+  const data = currentModalData;
+  if (!data || !data.itemData) return;
+
+  // Validate size
+  const sizeField = modalRmSize.closest('.rm-field');
+  sizeField.classList.remove('input-error');
+  const size = modalRmSize.value;
+  if (!size) { sizeField.classList.add('input-error'); missing.push('المقاس'); }
+
+  // Validate color
+  const colorField = modalRmColor.closest('.rm-field');
+  colorField.classList.remove('input-error');
+  const color = modalRmColor.value;
+  if (!color) { colorField.classList.add('input-error'); missing.push('اللون'); }
+
+  // Validate name
+  const nameField = modalRmName.closest('.rm-field');
+  nameField.classList.remove('input-error');
+  const name = modalRmName.value.trim();
+  if (!name) { nameField.classList.add('input-error'); missing.push('الاسم'); }
+
+  // Validate phone
+  const phoneField = modalRmPhone.closest('.rm-field');
+  phoneField.classList.remove('input-error');
+  const phone = modalRmPhone.value.trim();
+  if (!phone) { phoneField.classList.add('input-error'); missing.push('رقم الهاتف'); }
+
+  if (missing.length > 0) {
+    modalRmError.innerHTML = '⚠️ يرجى إكمال الحقول التالية:<br>' + missing.map(m => `• ${m}`).join('<br>');
+    modalRmError.style.display = 'block';
+    return;
+  }
+
+  modalRmError.style.display = 'none';
+  modalRmSubmit.disabled = true;
+
+  // Save to Firestore
+  let docId = null;
+  try {
+    const body = {
+      fields: {
+        orderType:     { stringValue: 'ready-made' },
+        customerName:  { stringValue: name },
+        customerPhone: { stringValue: phone },
+        imageId:       { stringValue: data.itemData.id },
+        imageUrl:      { stringValue: data.url },
+        itemName:      { stringValue: data.label },
+        price:         { integerValue: data.price },
+        size:          { stringValue: size },
+        color:         { stringValue: color },
+        status:        { stringValue: 'new' },
+        createdAt:     { timestampValue: new Date().toISOString() },
+        updatedAt:     { timestampValue: new Date().toISOString() }
+      }
+    };
+    const res = await fetch(ORDERS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (res.ok) {
+      const doc = await res.json();
+      docId = doc.name.split('/').pop();
+    }
+  } catch {}
+
+  // Decrement quantity
+  if (data.itemData.quantity > 0) {
+    const imgDocUrl = `${FS_BASE}/images/${data.itemData.id}?key=${API_KEY}&updateMask.fieldPaths=quantity`;
+    fetch(imgDocUrl, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: { quantity: { integerValue: data.itemData.quantity - 1 } } })
+    }).catch(() => {});
+  }
+
+  const orderPayload = {
+    orderType: 'ready-made',
+    orderId: docId || 'NO-ID',
+    customerName: name,
+    customerPhone: phone,
+    itemName: data.label,
+    imageUrl: data.url,
+    price: data.price,
+    size, color,
+    siteUrl: window.location.origin
+  };
+
+  // Telegram
+  fetch('/.netlify/functions/notify-order', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderPayload)
+  }).catch(() => {});
+
+  // N8N
+  const n8nParams = new URLSearchParams({
+    orderType: 'ready-made',
+    orderId: orderPayload.orderId,
+    customerName: name, customerPhone: phone,
+    itemName: data.label, imageUrl: data.url,
+    price: data.price, size, color
+  });
+  fetch(`https://n8n.srv1411989.hstgr.cloud/webhook/fd60b297-e889-45f4-aef4-cb0e74a6e3d8?${n8nParams}`)
+    .catch(() => {});
+
+  // Show confirmation
+  document.getElementById('modal-rm-order-num').textContent = docId ? `#${docId.slice(-6).toUpperCase()}` : '—';
+  modalRmSubmit.style.display = 'none';
+  modalRmConfirm.style.display = 'flex';
+  modalRmSubmit.disabled = false;
+}
+
 // ---- Category Toggle ----
 const toggleBtns = document.querySelectorAll('.toggle-btn');
 const categories = document.querySelectorAll('.gallery-category');
@@ -505,13 +681,22 @@ async function loadCategory(category) {
       const imagesRows = imageResults[i];
       if (!imagesRows.length) return;
 
-      const images = imagesRows.map(r => ({
-        id:          r.document.name.split('/').pop(),
-        storageUrl:  field(r.document, 'storageUrl'),
-        description: field(r.document, 'description'),
-        order:       Number(field(r.document, 'order') || 0),
-        pricePerMeter: Number(field(r.document, 'pricePerMeter') || 0)
-      })).sort((a, b) => a.order - b.order);
+      const images = imagesRows.map(r => {
+        const img = {
+          id:          r.document.name.split('/').pop(),
+          storageUrl:  field(r.document, 'storageUrl'),
+          description: field(r.document, 'description'),
+          order:       Number(field(r.document, 'order') || 0),
+          pricePerMeter: Number(field(r.document, 'pricePerMeter') || 0)
+        };
+        if (category === 'ready-made') {
+          img.price    = Number(field(r.document, 'price') || 0);
+          img.quantity = Number(field(r.document, 'quantity') || 0);
+          img.sizes    = fieldArray(r.document, 'sizes');
+          img.colors   = fieldArray(r.document, 'colors');
+        }
+        return img;
+      }).sort((a, b) => a.order - b.order);
 
       container.appendChild(buildSectionEl(section, images, category));
     });
@@ -539,7 +724,7 @@ function buildSectionEl(section, images, category) {
 
   images.forEach(img => {
     const label  = img.description || 'قطعة من المعرض';
-    const price  = img.pricePerMeter || 0;
+    const price  = category === 'ready-made' ? (img.price || 0) : (img.pricePerMeter || 0);
     const waText = encodeURIComponent(`أنا مهتم بهذه القطعة:\n${img.storageUrl}`);
     const waLink = `https://wa.me/${WA_NUMBER}?text=${waText}`;
 
@@ -563,15 +748,29 @@ function buildSectionEl(section, images, category) {
     imgEl.src = img.storageUrl;
     card.appendChild(imgEl);
 
-    // Show price badge on tailored fabric cards
+    // Price badge
     if (category === 'tailored' && price > 0) {
       const badge = document.createElement('div');
       badge.className = 'price-badge';
       badge.textContent = `${price.toLocaleString()} د.ع/م`;
       card.appendChild(badge);
+    } else if (category === 'ready-made' && price > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'price-badge';
+      badge.textContent = `${price.toLocaleString()} د.ع`;
+      card.appendChild(badge);
     }
 
-    const openThisModal = () => openModal(img.storageUrl, label, waLink, category, price);
+    // Out of stock overlay
+    if (category === 'ready-made' && img.quantity <= 0) {
+      const oos = document.createElement('div');
+      oos.className = 'out-of-stock-badge';
+      oos.innerHTML = '<span>نفذت الكمية</span>';
+      card.appendChild(oos);
+    }
+
+    const itemData = category === 'ready-made' ? { id: img.id, sizes: img.sizes, colors: img.colors, quantity: img.quantity } : null;
+    const openThisModal = () => openModal(img.storageUrl, label, waLink, category, price, itemData);
     card.addEventListener('click', openThisModal);
     card.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThisModal(); }

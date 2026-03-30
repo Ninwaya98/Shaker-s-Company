@@ -391,6 +391,40 @@
       <button class="modal-close" id="modal-close" aria-label="إغلاق">&times;</button>
       <img class="modal-image" id="modal-image" src="" alt="" />
       <p class="modal-desc" id="modal-desc"></p>
+
+      <!-- Ready-Made Order Form (hidden by default) -->
+      <div id="modal-readymade-order" style="display:none">
+        <div class="rm-price-display" id="modal-rm-price"></div>
+        <div class="rm-fields">
+          <div class="rm-field">
+            <label for="modal-rm-size">المقاس</label>
+            <select id="modal-rm-size"><option value="">اختر المقاس</option></select>
+          </div>
+          <div class="rm-field">
+            <label for="modal-rm-color">اللون</label>
+            <select id="modal-rm-color"><option value="">اختر اللون</option></select>
+          </div>
+        </div>
+        <div class="rm-fields">
+          <div class="rm-field">
+            <label for="modal-rm-name">الاسم</label>
+            <input type="text" id="modal-rm-name" required />
+          </div>
+          <div class="rm-field">
+            <label for="modal-rm-phone">رقم الهاتف</label>
+            <input type="tel" id="modal-rm-phone" inputmode="numeric" dir="ltr" required />
+          </div>
+        </div>
+        <div id="modal-rm-error" class="order-error" style="display:none"></div>
+        <button id="modal-rm-submit" type="button" class="rm-submit-btn">أرسل الطلب</button>
+        <div id="modal-rm-confirmation" class="order-confirm" style="display:none">
+          <div class="order-confirm-check">✓</div>
+          <div class="order-confirm-title">تم استلام طلبك بنجاح!</div>
+          <div class="order-confirm-sub">رقم الطلب: <strong id="modal-rm-order-num"></strong></div>
+          <div class="order-confirm-note">سنتواصل معك في أقرب وقت ممكن</div>
+        </div>
+      </div>
+
       <div class="modal-actions">
         <button class="modal-btn-select-fabric" id="modal-select-fabric" style="display:none">
           ✂️ اختر هذا القماش

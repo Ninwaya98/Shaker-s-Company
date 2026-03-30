@@ -1157,6 +1157,67 @@ img { display: block; max-width: 100%; }
   }
 }
 
+/* =====================
+   Ready-Made Meta Panel
+   ===================== */
+.admin-readymade-meta {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  background: rgba(11,28,61,0.88);
+  padding: 6px 6px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-meta-label {
+  color: rgba(255,255,255,0.5);
+  font-size: 0.55rem;
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 32px;
+}
+
+.admin-meta-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 4px;
+  color: var(--gold);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 4px;
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+  min-width: 0;
+}
+
+.admin-meta-input::-webkit-outer-spin-button,
+.admin-meta-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.admin-meta-input:focus {
+  border-color: var(--gold);
+}
+
+.admin-meta-input::placeholder {
+  color: rgba(255,255,255,0.35);
+  font-size: 0.55rem;
+}
+
 /* Touch devices — always show delete button */
 @media (hover: none), (pointer: coarse) {
   .btn-delete-img {

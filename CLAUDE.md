@@ -145,4 +145,32 @@ images/{id}
   order: number
   createdAt: timestamp
   fileName: string
+  pricePerMeter: number     (tailored/fabrics only — price per meter in IQD)
+  price: number             (ready-made only — fixed price in IQD)
+  quantity: number           (ready-made only — stock count)
+  sizes: array<string>       (ready-made only — e.g. ["S","M","L"])
+  colors: array<string>      (ready-made only — e.g. ["أبيض","بيج"])
+
+orders/{id}
+  orderType: "tailored" | "ready-made"
+  customerName: string
+  customerPhone: string
+  status: string ("new")
+  createdAt: timestamp
+  updatedAt: timestamp
+  # Tailored orders:
+  measurements: map (totalLength, chest, shoulder, neck, sleeveLength, sleeveWidth)
+  fabricUrl: string
+  dishdashaType: string
+  collarType: string
+  pocketType: string
+  sleeveType: string
+  notes: string
+  # Ready-made orders:
+  imageId: string
+  imageUrl: string
+  itemName: string
+  price: number
+  size: string
+  color: string
 ```

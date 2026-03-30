@@ -378,11 +378,18 @@ async function quickUpload(files, category) {
             async () => {
               const url = await getDownloadURL(task.snapshot.ref);
               orderCounter++;
-              await addDoc(collection(db, 'images'), {
+              const imgDoc = {
                 sectionId, storageUrl: url, storagePath,
                 fileName: file.name, description: '', order: orderCounter,
                 createdAt: serverTimestamp()
-              });
+              };
+              if (category === 'ready-made') {
+                imgDoc.price = 0;
+                imgDoc.quantity = 0;
+                imgDoc.sizes = [];
+                imgDoc.colors = [];
+              }
+              await addDoc(collection(db, 'images'), imgDoc);
               done++;
               progressBar.style.width = `${Math.round((done / fileArr.length) * 100)}%`;
               resolve();
@@ -492,21 +499,46 @@ function buildImageItem(img, category) {
   const item = document.createElement('div');
   item.className = 'admin-image-item';
 
-  const currentPrice = img.pricePerMeter || '';
-  const priceHtml = category === 'tailored' || category === 'fabrics'
-    ? `<div class="admin-price-wrap">
+  let metaHtml = '';
+  if (category === 'tailored' || category === 'fabrics') {
+    const currentPrice = img.pricePerMeter || '';
+    metaHtml = `<div class="admin-price-wrap">
         <input type="number" class="admin-price-input" value="${currentPrice}" placeholder="سعر/م" min="0" step="500" />
         <span class="admin-price-unit">د.ع</span>
-       </div>`
-    : '';
+       </div>`;
+  } else if (category === 'ready-made') {
+    const price = img.price || '';
+    const qty = img.quantity != null ? img.quantity : '';
+    const sizes = Array.isArray(img.sizes) ? img.sizes.join('، ') : '';
+    const colors = Array.isArray(img.colors) ? img.colors.join('، ') : '';
+    metaHtml = `<div class="admin-readymade-meta">
+      <div class="admin-meta-row">
+        <span class="admin-meta-label">سعر</span>
+        <input type="number" class="admin-meta-input" data-field="price" value="${price}" placeholder="السعر" min="0" step="500" />
+        <span class="admin-meta-label">د.ع</span>
+      </div>
+      <div class="admin-meta-row">
+        <span class="admin-meta-label">كمية</span>
+        <input type="number" class="admin-meta-input" data-field="quantity" value="${qty}" placeholder="٠" min="0" step="1" />
+      </div>
+      <div class="admin-meta-row">
+        <span class="admin-meta-label">مقاس</span>
+        <input type="text" class="admin-meta-input" data-field="sizes" value="${escapeHtml(sizes)}" placeholder="S, M, L, XL" />
+      </div>
+      <div class="admin-meta-row">
+        <span class="admin-meta-label">لون</span>
+        <input type="text" class="admin-meta-input" data-field="colors" value="${escapeHtml(colors)}" placeholder="أبيض، بيج" />
+      </div>
+    </div>`;
+  }
 
   item.innerHTML = `
     <img src="${img.storageUrl}" alt="${escapeHtml(img.description || img.fileName || '')}" loading="lazy" />
     <button class="btn-delete-img" title="حذف الصورة">✕</button>
-    ${priceHtml}
+    ${metaHtml}
   `;
 
-  // Save price on change
+  // Save price on change (tailored/fabrics)
   const priceInput = item.querySelector('.admin-price-input');
   if (priceInput) {
     priceInput.addEventListener('click', e => e.stopPropagation());
@@ -523,8 +555,31 @@ function buildImageItem(img, category) {
     });
   }
 
+  // Save ready-made meta fields on change
+  item.querySelectorAll('.admin-readymade-meta .admin-meta-input').forEach(input => {
+    input.addEventListener('click', e => e.stopPropagation());
+    input.addEventListener('change', async () => {
+      const field = input.dataset.field;
+      let val;
+      if (field === 'price' || field === 'quantity') {
+        val = Number(input.value) || 0;
+      } else {
+        // sizes/colors: split by comma (Arabic or English)
+        val = input.value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
+      }
+      try {
+        await updateDoc(doc(db, 'images', img.id), { [field]: val });
+        img[field] = val;
+        showToast('تم الحفظ', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('تعذّر الحفظ', 'error');
+      }
+    });
+  });
+
   item.addEventListener('click', (e) => {
-    if (e.target.closest('.btn-delete-img') || e.target.closest('.admin-price-wrap')) return;
+    if (e.target.closest('.btn-delete-img') || e.target.closest('.admin-price-wrap') || e.target.closest('.admin-readymade-meta')) return;
     toggleSelectImage(img, category, item);
   });
 
@@ -538,7 +593,6 @@ function buildImageItem(img, category) {
       await deleteDoc(doc(db, 'images', img.id));
       item.remove();
       allImageItems[category] = allImageItems[category].filter(i => i.img.id !== img.id);
-      // Remove from selection if selected
       const idx = selectedImages.findIndex(s => s.id === img.id);
       if (idx >= 0) { selectedImages.splice(idx, 1); updateSelectionPanel(); }
       showToast('تم حذف الصورة', 'success');
