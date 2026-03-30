@@ -188,56 +188,6 @@ const measureFields = [
   { id: 'm-sleeve-w',  label: 'عرض الردن' }
 ];
 
-function buildOrderMessage() {
-  let valid = true;
-
-  // Validate & collect measurements
-  const values = measureFields.map(f => {
-    const el = document.getElementById(f.id);
-    el.classList.remove('input-error');
-    const v = el.value.trim();
-    if (!v || Number(v) <= 0) {
-      el.classList.add('input-error');
-      // Re-trigger animation
-      void el.offsetWidth;
-      valid = false;
-      return null;
-    }
-    return { label: f.label, value: v };
-  });
-
-  if (!valid) {
-    const firstError = document.querySelector('.measure-input.input-error');
-    if (firstError) {
-      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstError.focus();
-    }
-    return null;
-  }
-
-  const notes   = document.getElementById('m-notes').value.trim() || 'لا يوجد';
-  const fabric  = selectedFabric ? selectedFabric.url : 'لم يُحدد';
-
-  const collar = selectedCollar ? `ياخة ${selectedCollar}` : 'لم يُحدد';
-  const pocket = selectedPocket ? `جيب ${selectedPocket}` : 'لم يُحدد';
-
-  const lines = [
-    'طلب فصال جديد 🪡',
-    '━━━━━━━━━━━━━━━━',
-    'القياسات (سم):',
-    ...values.map(v => `• ${v.label}: ${v.value}`),
-    '━━━━━━━━━━━━━━━━',
-    `نوع الياخة: ${collar}`,
-    `نوع الجيب: ${pocket}`,
-    '━━━━━━━━━━━━━━━━',
-    `القماش المختار: ${fabric}`,
-    '━━━━━━━━━━━━━━━━',
-    `ملاحظات: ${notes}`
-  ];
-
-  return lines.join('\n');
-}
-
 async function saveOrderToFirestore(measurements, fabricUrl, notes, customerName, customerPhone) {
   try {
     const body = {
@@ -275,28 +225,42 @@ async function saveOrderToFirestore(measurements, fabricUrl, notes, customerName
 }
 
 async function submitOrder() {
-  const msg = buildOrderMessage();
-  if (!msg) return;
+  // Validate measurements
+  let valid = true;
+  const values = measureFields.map(f => {
+    const el = document.getElementById(f.id);
+    el.classList.remove('input-error');
+    const v = el.value.trim();
+    if (!v || Number(v) <= 0) {
+      el.classList.add('input-error');
+      void el.offsetWidth;
+      valid = false;
+      return null;
+    }
+    return { label: f.label, value: v };
+  });
 
-  const btn = document.getElementById('order-whatsapp-btn');
+  if (!valid) {
+    const firstError = document.querySelector('.measure-input.input-error');
+    if (firstError) {
+      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      firstError.focus();
+    }
+    return;
+  }
+
+  const btn = document.getElementById('place-order-btn');
   btn.disabled = true;
 
-  // Collect customer info
   const customerName  = document.getElementById('c-name').value.trim();
   const customerPhone = document.getElementById('c-phone').value.trim();
   const notes         = document.getElementById('m-notes').value.trim();
   const fabricUrl     = selectedFabric ? selectedFabric.url : '';
 
-  // Re-collect measurements for Firestore
-  const values = measureFields.map(f => ({
-    label: f.label,
-    value: document.getElementById(f.id).value.trim()
-  }));
-
-  // Save to Firestore (non-blocking — open WhatsApp regardless)
+  // Save to Firestore
   const docId = await saveOrderToFirestore(values, fabricUrl, notes, customerName, customerPhone);
 
-  // Fire-and-forget Telegram notification (send even if Firestore save failed)
+  // Send Telegram notification
   fetch('/.netlify/functions/notify-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -311,10 +275,6 @@ async function submitOrder() {
     })
   }).catch(() => {});
 
-  // Open WhatsApp
-  const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-  window.open(url, '_blank', 'noopener');
-
   // Show confirmation
   const confirmation = document.getElementById('order-confirmation');
   const orderNum     = document.getElementById('order-confirm-num');
@@ -325,7 +285,7 @@ async function submitOrder() {
   btn.disabled = false;
 }
 
-document.getElementById('order-whatsapp-btn').addEventListener('click', submitOrder);
+document.getElementById('place-order-btn').addEventListener('click', submitOrder);
 
 document.getElementById('new-order-btn').addEventListener('click', () => {
   // Reset all measurement inputs
@@ -345,7 +305,7 @@ document.getElementById('new-order-btn').addEventListener('click', () => {
   selectedPocket = null;
   document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
   // Show submit button, hide confirmation
-  document.getElementById('order-whatsapp-btn').style.display = 'flex';
+  document.getElementById('place-order-btn').style.display = 'flex';
   document.getElementById('order-confirmation').style.display = 'none';
   // Scroll to form
   document.getElementById('fabric-form').scrollIntoView({ behavior: 'smooth', block: 'start' });

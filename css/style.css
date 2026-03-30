@@ -935,15 +935,15 @@ nav a:hover {
 }
 
 /* Submit button */
-#order-whatsapp-btn {
+#place-order-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
   margin-top: 1.75rem;
   width: 100%;
-  background: #25D366;
-  color: #fff;
+  background: var(--gold);
+  color: var(--navy);
   font-family: 'Cairo', sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
@@ -951,12 +951,12 @@ nav a:hover {
   border: none;
   border-radius: 50px;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(37,211,102,0.35);
+  box-shadow: 0 4px 20px rgba(201,168,76,0.35);
   transition: background var(--transition), transform var(--transition);
 }
 
-#order-whatsapp-btn:hover {
-  background: #1ebe5d;
+#place-order-btn:hover {
+  background: #b8953e;
   transform: translateY(-2px);
 }
 
@@ -1117,7 +1117,7 @@ footer span {
     padding: 0.65rem 0.5rem;
   }
 
-  #order-whatsapp-btn {
+  #place-order-btn {
     font-size: 1rem;
     padding: 0.85rem 1.5rem;
     min-height: 52px;
