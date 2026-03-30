@@ -35,8 +35,8 @@ const modalSelectFabric = document.getElementById('modal-select-fabric');
 
 let currentModalData = null; // { url, label } of the image currently open in modal
 
-function openModal(imgSrc, label, waLink, category) {
-  currentModalData = { url: imgSrc, label };
+function openModal(imgSrc, label, waLink, category, price = 0) {
+  currentModalData = { url: imgSrc, label, price };
   modalImage.src        = imgSrc;
   modalImage.alt        = label;
   modalDesc.textContent = label;
@@ -113,17 +113,17 @@ let selectedFabric = null; // { url, label, cardEl }
 
 modalSelectFabric.addEventListener('click', () => {
   if (!currentModalData) return;
-  selectFabric(currentModalData.url, currentModalData.label);
+  selectFabric(currentModalData.url, currentModalData.label, currentModalData.price);
   closeModal();
 });
 
-function selectFabric(url, label) {
+function selectFabric(url, label, price = 0) {
   // Remove highlight from previous selection
   if (selectedFabric && selectedFabric.cardEl) {
     selectedFabric.cardEl.classList.remove('fabric-selected-card');
   }
 
-  selectedFabric = { url, label, cardEl: null };
+  selectedFabric = { url, label, price, cardEl: null };
 
   // Highlight the matching card in the tailored gallery
   document.querySelectorAll('#sections-tailored .gallery-card').forEach(card => {
@@ -138,6 +138,13 @@ function selectFabric(url, label) {
   const strip = document.getElementById('selected-fabric-strip');
   document.getElementById('selected-fabric-thumb').src = url;
   document.getElementById('selected-fabric-label').textContent = label;
+  const priceEl = document.getElementById('selected-fabric-price');
+  if (price > 0) {
+    priceEl.textContent = `${price.toLocaleString()} د.ع / متر`;
+    priceEl.style.display = 'block';
+  } else {
+    priceEl.style.display = 'none';
+  }
   strip.style.display = 'flex';
 
   // Scroll to the form
@@ -444,7 +451,8 @@ async function loadCategory(category) {
         id:          r.document.name.split('/').pop(),
         storageUrl:  field(r.document, 'storageUrl'),
         description: field(r.document, 'description'),
-        order:       Number(field(r.document, 'order') || 0)
+        order:       Number(field(r.document, 'order') || 0),
+        pricePerMeter: Number(field(r.document, 'pricePerMeter') || 0)
       })).sort((a, b) => a.order - b.order);
 
       container.appendChild(buildSectionEl(section, images, category));
@@ -473,6 +481,7 @@ function buildSectionEl(section, images, category) {
 
   images.forEach(img => {
     const label  = img.description || 'قطعة من المعرض';
+    const price  = img.pricePerMeter || 0;
     const waText = encodeURIComponent(`أنا مهتم بهذه القطعة:\n${img.storageUrl}`);
     const waLink = `https://wa.me/${WA_NUMBER}?text=${waText}`;
 
@@ -494,9 +503,17 @@ function buildSectionEl(section, images, category) {
       imgEl.classList.remove('loading');
     };
     imgEl.src = img.storageUrl;
-
     card.appendChild(imgEl);
-    const openThisModal = () => openModal(img.storageUrl, label, waLink, category);
+
+    // Show price badge on tailored fabric cards
+    if (category === 'tailored' && price > 0) {
+      const badge = document.createElement('div');
+      badge.className = 'price-badge';
+      badge.textContent = `${price.toLocaleString()} د.ع/م`;
+      card.appendChild(badge);
+    }
+
+    const openThisModal = () => openModal(img.storageUrl, label, waLink, category, price);
     card.addEventListener('click', openThisModal);
     card.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openThisModal(); }

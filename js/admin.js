@@ -491,13 +491,40 @@ async function loadPhotos(category) {
 function buildImageItem(img, category) {
   const item = document.createElement('div');
   item.className = 'admin-image-item';
+
+  const currentPrice = img.pricePerMeter || '';
+  const priceHtml = category === 'tailored' || category === 'fabrics'
+    ? `<div class="admin-price-wrap">
+        <input type="number" class="admin-price-input" value="${currentPrice}" placeholder="سعر/م" min="0" step="500" />
+        <span class="admin-price-unit">د.ع</span>
+       </div>`
+    : '';
+
   item.innerHTML = `
     <img src="${img.storageUrl}" alt="${escapeHtml(img.description || img.fileName || '')}" loading="lazy" />
     <button class="btn-delete-img" title="حذف الصورة">✕</button>
+    ${priceHtml}
   `;
 
+  // Save price on change
+  const priceInput = item.querySelector('.admin-price-input');
+  if (priceInput) {
+    priceInput.addEventListener('click', e => e.stopPropagation());
+    priceInput.addEventListener('change', async () => {
+      const val = Number(priceInput.value) || 0;
+      try {
+        await updateDoc(doc(db, 'images', img.id), { pricePerMeter: val });
+        img.pricePerMeter = val;
+        showToast('تم حفظ السعر', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast('تعذّر حفظ السعر', 'error');
+      }
+    });
+  }
+
   item.addEventListener('click', (e) => {
-    if (e.target.closest('.btn-delete-img')) return;
+    if (e.target.closest('.btn-delete-img') || e.target.closest('.admin-price-wrap')) return;
     toggleSelectImage(img, category, item);
   });
 

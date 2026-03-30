@@ -70,7 +70,10 @@
         <!-- Selected fabric strip -->
         <div id="selected-fabric-strip" style="display:none">
           <img id="selected-fabric-thumb" src="" alt="القماش المختار" />
-          <span id="selected-fabric-label"></span>
+          <div class="fabric-strip-info">
+            <span id="selected-fabric-label"></span>
+            <span id="selected-fabric-price" class="fabric-strip-price" style="display:none"></span>
+          </div>
           <button id="clear-fabric-btn" aria-label="إلغاء الاختيار">&times;</button>
         </div>
 
@@ -367,5 +370,10 @@
   <script>
     document.getElementById('footer-year').textContent = new Date().getFullYear();
   </script>
+
+  <!-- LeadConnector Chat Widget -->
+  <script src="https://beta.leadconnectorhq.com/loader.js"
+    data-resources-url="https://beta.leadconnectorhq.com/chat-widget/loader.js"
+    data-widget-id="69c9d55abf76e301816c3ae6"></script>
 </body>
 </html>
