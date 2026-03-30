@@ -579,9 +579,11 @@ function toggleSelectImage(imgData, category, element) {
 function updateSelectionPanel() {
   if (selectedImages.length === 0) {
     selectionPanel.classList.remove('show');
+    document.body.classList.remove('sel-panel-open');
     return;
   }
   selectionPanel.classList.add('show');
+  document.body.classList.add('sel-panel-open');
   selCount.textContent = `${selectedImages.length} صورة محددة`;
 
   // Show ALL sections across all categories, grouped

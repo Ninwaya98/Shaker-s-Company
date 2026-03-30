@@ -1180,6 +1180,11 @@ img { display: block; max-width: 100%; }
     transform: translateY(0);
     visibility: visible;
   }
+
+  /* Allow scrolling past the bottom sheet when selection panel is open */
+  body.sel-panel-open .admin-main {
+    padding-bottom: 65vh;
+  }
 }
 
 /* =====================
