@@ -42,11 +42,14 @@ function openModal(imgSrc, label, waLink, category) {
   modalDesc.textContent = label;
   modalWA.href          = waLink;
 
-  // Show "select fabric" button only for tailored category
   if (category === 'tailored') {
-    modalSelectFabric.style.display = 'block';
+    // Tailored: show select fabric + cancel, hide WhatsApp
+    modalSelectFabric.style.display = 'inline-flex';
+    modalWA.style.display = 'none';
   } else {
+    // Fabrics / ready-made: show WhatsApp + cancel, hide select fabric
     modalSelectFabric.style.display = 'none';
+    modalWA.style.display = 'inline-flex';
   }
 
   modal.classList.add('open');
