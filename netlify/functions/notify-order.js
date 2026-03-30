@@ -67,37 +67,25 @@ exports.handler = async (event) => {
     '━━━━━━━━━━━━━━━━'
   );
 
-  // Dishdasha type labels
+  // Dishdasha type
   const dishdashaLabels = {
     'iraqi1': 'عراقي سحاب', 'iraqi2': 'عراقي ظاهري', 'iraqi3': 'عراقي مخفي',
     'kuwaiti1': 'كويتي مخفي', 'kuwaiti2': 'كويتي ظاهري', 'kuwaiti3': 'كويتي مخفي (حشوه)'
   };
-  const dishdashaFiles = {
-    'iraqi1': 'Iraqi1.svg', 'iraqi2': 'Iraqi2.svg', 'iraqi3': 'Iraqi3.svg',
-    'kuwaiti1': 'Kuaiti1.svg', 'kuwaiti2': 'kuaiti2.svg', 'kuwaiti3': 'kuaiti3.svg'
-  };
-
   if (dishdashaType) {
-    const label = dishdashaLabels[dishdashaType] || dishdashaType;
-    const file = dishdashaFiles[dishdashaType];
-    const imgUrl = siteUrl && file ? `${siteUrl}/assets/dishdasha%20type/${encodeURIComponent(file)}` : '';
-    lines.push(`🪡 نوع الدشداشة: ${label}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+    lines.push(`🪡 نوع الدشداشة: ${dishdashaLabels[dishdashaType] || dishdashaType}`);
   }
 
-  // Collar & Pocket SVG filenames (some have spaces in them)
-  const collarFiles = { '1': 'neck1.svg', '2': 'neck 2.svg', '3': 'neck 3.svg', '4': 'neck4.svg', '5': 'neck5.svg' };
-  const pocketFiles = { '1': 'pocket1.svg', '2': 'pocket2.svg', '3': 'pocket 3.svg', '4': 'pocket 4.svg' };
-
+  // Collar
+  const collarLabels = { '1': 'ياخة قميص كبيرة', '2': 'ياخة قميص وسط', '3': 'ياخة دگمة وحدة', '4': 'ياخة دگمتين', '5': 'ياخة فراشة' };
   if (collarType) {
-    const file = collarFiles[collarType];
-    const imgUrl = siteUrl && file ? `${siteUrl}/assets/${encodeURIComponent(file)}` : '';
-    const collarLabels = { '1': 'ياخة قميص كبيرة', '2': 'ياخة قميص وسط', '3': 'ياخة دگمة وحدة', '4': 'ياخة دگمتين', '5': 'ياخة فراشة' };
-    lines.push(`👔 نوع الياخة: ${collarLabels[collarType] || collarType}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+    lines.push(`👔 نوع الياخة: ${collarLabels[collarType] || collarType}`);
   }
+
+  // Pocket
+  const pocketLabels = { '1': 'جيب ١', '2': 'جيب ٢', '3': 'جيب ٣', '4': 'جيب ٤' };
   if (pocketType) {
-    const file = pocketFiles[pocketType];
-    const imgUrl = siteUrl && file ? `${siteUrl}/assets/${encodeURIComponent(file)}` : '';
-    lines.push(`🧥 نوع الجيب: جيب ${pocketType}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+    lines.push(`🧥 نوع الجيب: ${pocketLabels[pocketType] || pocketType}`);
   }
 
   // Sleeve type
