@@ -69,8 +69,8 @@ exports.handler = async (event) => {
 
   // Dishdasha type labels
   const dishdashaLabels = {
-    'iraqi1': 'عراقي ١', 'iraqi2': 'عراقي ٢', 'iraqi3': 'عراقي ٣',
-    'kuwaiti1': 'كويتي ١', 'kuwaiti2': 'كويتي ٢', 'kuwaiti3': 'كويتي ٣'
+    'iraqi1': 'عراقي سحاب', 'iraqi2': 'عراقي ظاهري', 'iraqi3': 'عراقي مخفي',
+    'kuwaiti1': 'كويتي مخفي', 'kuwaiti2': 'كويتي ظاهري', 'kuwaiti3': 'كويتي مخفي (حشوه)'
   };
   const dishdashaFiles = {
     'iraqi1': 'Iraqi1.svg', 'iraqi2': 'Iraqi2.svg', 'iraqi3': 'Iraqi3.svg',
@@ -91,7 +91,8 @@ exports.handler = async (event) => {
   if (collarType) {
     const file = collarFiles[collarType];
     const imgUrl = siteUrl && file ? `${siteUrl}/assets/${encodeURIComponent(file)}` : '';
-    lines.push(`👔 نوع الياخة: ياخة ${collarType}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+    const collarLabels = { '1': 'ياخة قميص كبيرة', '2': 'ياخة قميص وسط', '3': 'ياخة دگمة وحدة', '4': 'ياخة دگمتين', '5': 'ياخة فراشة' };
+    lines.push(`👔 نوع الياخة: ${collarLabels[collarType] || collarType}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
   }
   if (pocketType) {
     const file = pocketFiles[pocketType];
