@@ -181,6 +181,14 @@ document.querySelectorAll('.style-option').forEach(btn => {
   });
 });
 
+// ---- Tap outside input to dismiss keyboard ----
+document.addEventListener('touchstart', e => {
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) {
+    if (!e.target.closest('input, textarea, label')) active.blur();
+  }
+});
+
 // ---- Arabic/English Numeral Support ----
 function normalizeArabicNums(str) {
   return str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
