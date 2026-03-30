@@ -720,20 +720,20 @@ nav a:hover {
 .measure-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-  max-width: 400px;
+  gap: 0.85rem;
+  max-width: 440px;
   margin: 0 auto;
 }
 
 .measure-row {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
 }
 
 .measure-row label {
-  width: 88px;
-  font-size: 0.92rem;
+  width: 95px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--navy);
   text-align: right;
@@ -749,17 +749,17 @@ nav a:hover {
 
 .measure-input {
   flex: 1;
-  padding: 0.5rem 0.6rem;
+  padding: 0.6rem 0.7rem;
   border: 1px solid var(--cream-dark);
   border-radius: 6px;
   font-family: 'Cairo', sans-serif;
-  font-size: 1rem;
+  font-size: 1.1rem;
   color: var(--text-dark);
   background: var(--cream);
   transition: border-color var(--transition);
   text-align: center;
   direction: ltr;
-  max-width: 100px;
+  max-width: 110px;
 }
 
 .measure-input:focus {
@@ -773,7 +773,7 @@ nav a:hover {
 }
 
 .measure-unit {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #999;
 }
