@@ -263,26 +263,27 @@
           </div>
         </div>
 
-        <!-- Submit -->
-        <button id="place-order-btn" type="button">
-          <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
-          أرسل الطلب
-        </button>
-
-        <!-- Order Confirmation (shown after submit) -->
-        <div id="order-confirmation" style="display:none">
-          <div class="order-confirm-check">✓</div>
-          <div class="order-confirm-title">تم استلام طلبك بنجاح!</div>
-          <div class="order-confirm-sub">رقم الطلب: <strong id="order-confirm-num"></strong></div>
-          <div class="order-confirm-note">سنتواصل معك في أقرب وقت ممكن</div>
-          <button id="new-order-btn" class="new-order-btn" type="button">طلب جديد</button>
-        </div>
       </div>
 
       <!-- Tailored gallery (below form — for fabric selection) -->
       <div class="fabric-gallery-label">اختر قماشاً من المعرض (اختياري)</div>
       <div id="sections-tailored">
         <div class="spinner"></div>
+      </div>
+
+      <!-- Submit (after fabric gallery so customer scrolls past fabrics first) -->
+      <button id="place-order-btn" type="button">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
+        أرسل الطلب
+      </button>
+
+      <!-- Order Confirmation (shown after submit) -->
+      <div id="order-confirmation" style="display:none">
+        <div class="order-confirm-check">✓</div>
+        <div class="order-confirm-title">تم استلام طلبك بنجاح!</div>
+        <div class="order-confirm-sub">رقم الطلب: <strong id="order-confirm-num"></strong></div>
+        <div class="order-confirm-note">سنتواصل معك في أقرب وقت ممكن</div>
+        <button id="new-order-btn" class="new-order-btn" type="button">طلب جديد</button>
       </div>
 
     </div>

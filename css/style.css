@@ -247,46 +247,43 @@ nav a:hover {
 }
 
 .gallery-section {
-  margin-bottom: 3.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .gallery-section h3 {
-  font-size: 1.3rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--navy);
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.5rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem;
   border-bottom: 2px solid var(--gold);
   display: inline-block;
   letter-spacing: 0.01em;
 }
 
-/* Image Grid */
+/* Image Grid — 3 per row (Instagram-style) */
 .image-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
 }
 
 .image-grid .gallery-card {
   display: block;
-  border-radius: var(--radius);
+  border-radius: 2px;
   overflow: hidden;
   aspect-ratio: 1;
   background: var(--cream-dark);
-  box-shadow: var(--shadow);
-  transition: transform var(--transition), box-shadow var(--transition);
+  transition: opacity var(--transition);
 }
 
 .image-grid .gallery-card:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 36px rgba(11,28,61,0.22);
+  opacity: 0.85;
 }
 
 .image-grid .gallery-card:focus-visible {
   outline: 3px solid var(--gold);
-  outline-offset: 2px;
-  transform: translateY(-4px) scale(1.02);
+  outline-offset: 1px;
 }
 
 .image-grid img {
@@ -545,10 +542,10 @@ nav a:hover {
 
 .fabric-gallery-label {
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--navy);
-  margin: 2.5rem 0 1rem;
+  margin: 1.5rem 0 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid var(--gold);
   display: inline-block;
@@ -940,7 +937,8 @@ nav a:hover {
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  margin-top: 1.75rem;
+  margin: 2rem auto 0;
+  max-width: 480px;
   width: 100%;
   background: var(--gold);
   color: var(--navy);
@@ -1022,11 +1020,7 @@ footer span {
 /* =====================
    Responsive
    ===================== */
-@media (max-width: 900px) {
-  .image-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
+/* grid is already 3-col by default */
 
 @media (max-width: 600px) {
   header {
@@ -1081,16 +1075,12 @@ footer span {
   }
 
   .image-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  .image-grid .gallery-card {
-    border-radius: 8px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
   }
 
   .gallery-section h3 {
-    font-size: 1.1rem;
+    font-size: 0.9rem;
   }
 
   #fabric-form {
@@ -1305,8 +1295,8 @@ footer span {
 
 @media (max-width: 380px) {
   .image-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
   }
 
   .toggle-btn {
