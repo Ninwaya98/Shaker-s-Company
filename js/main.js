@@ -343,11 +343,18 @@ async function submitOrder() {
   }).catch(() => {});
 
   // Send to N8N → GHL WhatsApp
-  fetch('https://n8n.srv1411989.hstgr.cloud/webhook/fd60b297-e889-45f4-aef4-cb0e74a6e3d8', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(orderPayload)
-  }).catch(() => {});
+  const n8nParams = new URLSearchParams({
+    orderId: orderPayload.orderId,
+    customerName, customerPhone,
+    fabricUrl, fabricLabel: orderPayload.fabricLabel,
+    fabricPrice: orderPayload.fabricPrice,
+    collarType: orderPayload.collarType,
+    pocketType: orderPayload.pocketType,
+    notes: notes || '',
+    measurements: JSON.stringify(values)
+  });
+  fetch(`https://n8n.srv1411989.hstgr.cloud/webhook/fd60b297-e889-45f4-aef4-cb0e74a6e3d8?${n8nParams}`)
+    .catch(() => {});
 
   // Show confirmation
   const confirmation = document.getElementById('order-confirmation');
