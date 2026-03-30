@@ -323,19 +323,30 @@ async function submitOrder() {
   // Save to Firestore
   const docId = await saveOrderToFirestore(values, fabricUrl, notes, customerName, customerPhone);
 
+  const orderPayload = {
+    orderId: docId || 'NO-ID',
+    customerName, customerPhone,
+    measurements: values,
+    fabricUrl, notes,
+    collarType: selectedCollar || '',
+    pocketType: selectedPocket || '',
+    fabricLabel: selectedFabric.label || '',
+    fabricPrice: selectedFabric.price || 0,
+    siteUrl: window.location.origin
+  };
+
   // Send Telegram notification
   fetch('/.netlify/functions/notify-order', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      orderId: docId || 'NO-ID',
-      customerName, customerPhone,
-      measurements: values,
-      fabricUrl, notes,
-      collarType: selectedCollar || '',
-      pocketType: selectedPocket || '',
-      siteUrl: window.location.origin
-    })
+    body: JSON.stringify(orderPayload)
+  }).catch(() => {});
+
+  // Send to N8N → GHL WhatsApp
+  fetch('https://n8n.srv1411989.hstgr.cloud/webhook/fd60b297-e889-45f4-aef4-cb0e74a6e3d8', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderPayload)
   }).catch(() => {});
 
   // Show confirmation
