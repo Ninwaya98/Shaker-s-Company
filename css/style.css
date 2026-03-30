@@ -328,91 +328,71 @@ nav a:hover {
 /* ---- Contact Section ---- */
 #contact {
   background: var(--navy);
-  padding: 4rem 2rem;
+  padding: 3.5rem 2rem;
   text-align: center;
 }
 
 #contact h2 {
-  font-size: 1.9rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: var(--cream);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.3rem;
 }
 
 #contact .contact-sub {
-  color: rgba(245,240,232,0.6);
-  margin-bottom: 2.5rem;
-  font-size: 1rem;
+  color: rgba(245,240,232,0.45);
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
 }
 
-.contact-buttons {
+.contact-icons {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2.5rem;
+  gap: 2rem;
 }
 
-/* Shared contact button base */
-.btn-whatsapp,
-.btn-phone,
-.btn-instagram,
-.btn-facebook,
-.btn-tiktok {
-  display: inline-flex;
+.contact-icon-link {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.6rem;
-  font-family: 'Cairo', sans-serif;
-  font-size: 1.05rem;
-  font-weight: 600;
-  padding: 0.85rem 2rem;
-  border-radius: 50px;
-  color: #fff;
-  transition: background var(--transition), opacity var(--transition), color var(--transition), transform var(--transition);
+  gap: 0.5rem;
+  text-decoration: none;
+  transition: transform var(--transition);
 }
 
-.btn-whatsapp:hover,
-.btn-phone:hover,
-.btn-instagram:hover,
-.btn-facebook:hover,
-.btn-tiktok:hover {
-  transform: translateY(-2px);
+.contact-icon-link:hover {
+  transform: translateY(-3px);
 }
 
-/* Per-button overrides */
-.btn-whatsapp {
-  background: #25D366;
-  font-size: 1.1rem;
-  font-weight: 700;
-  padding: 0.9rem 2.2rem;
-  box-shadow: 0 4px 20px rgba(37,211,102,0.35);
-}
-.btn-whatsapp:hover { background: #1ebe5d; }
-
-.btn-phone {
-  background: transparent;
+.contact-icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(245,240,232,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--gold);
-  border: 2px solid var(--gold);
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
-.btn-phone:hover { background: var(--gold); color: var(--navy); }
 
-.btn-instagram {
-  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-  box-shadow: 0 4px 20px rgba(220,39,67,0.3);
+.contact-icon-link:hover .contact-icon-circle {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
 }
-.btn-instagram:hover { opacity: 0.9; }
 
-.btn-facebook {
-  background: #1877F2;
-  box-shadow: 0 4px 20px rgba(24,119,242,0.3);
+.contact-icon-link span {
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: rgba(245,240,232,0.5);
+  transition: color var(--transition);
 }
-.btn-facebook:hover { opacity: 0.9; }
 
-.btn-tiktok {
-  background: #010101;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+.contact-icon-link:hover span {
+  color: var(--gold);
 }
-.btn-tiktok:hover { opacity: 0.9; }
 
 /* ---- Image Preview Modal ---- */
 .modal-overlay {
@@ -1160,28 +1140,24 @@ footer span {
   }
 
   #contact {
-    padding: 2.5rem 1rem;
+    padding: 2rem 1rem;
   }
 
   #contact h2 {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
-  .contact-buttons {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
+  .contact-icons {
+    gap: 1.25rem;
   }
 
-  .btn-whatsapp,
-  .btn-phone,
-  .btn-instagram,
-  .btn-facebook,
-  .btn-tiktok {
-    width: 100%;
-    max-width: 320px;
-    justify-content: center;
-    min-height: 52px;
+  .contact-icon-circle {
+    width: 42px;
+    height: 42px;
+  }
+
+  .contact-icon-link span {
+    font-size: 0.65rem;
   }
 }
 
