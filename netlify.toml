@@ -2,6 +2,9 @@
   publish = "."
   command = "echo 'No build step needed'"
 
+[build.environment]
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "none"
