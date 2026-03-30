@@ -507,29 +507,13 @@ function buildImageItem(img, category) {
         <span class="admin-price-unit">د.ع</span>
        </div>`;
   } else if (category === 'ready-made') {
-    const price = img.price || '';
-    const qty = img.quantity != null ? img.quantity : '';
-    const sizes = Array.isArray(img.sizes) ? img.sizes.join('، ') : '';
-    const colors = Array.isArray(img.colors) ? img.colors.join('، ') : '';
-    metaHtml = `<div class="admin-readymade-meta">
-      <div class="admin-meta-row">
-        <span class="admin-meta-label">سعر</span>
-        <input type="number" class="admin-meta-input" data-field="price" value="${price}" placeholder="السعر" min="0" step="500" />
-        <span class="admin-meta-label">د.ع</span>
-      </div>
-      <div class="admin-meta-row">
-        <span class="admin-meta-label">كمية</span>
-        <input type="number" class="admin-meta-input" data-field="quantity" value="${qty}" placeholder="٠" min="0" step="1" />
-      </div>
-      <div class="admin-meta-row">
-        <span class="admin-meta-label">مقاس</span>
-        <input type="text" class="admin-meta-input" data-field="sizes" value="${escapeHtml(sizes)}" placeholder="S, M, L, XL" />
-      </div>
-      <div class="admin-meta-row">
-        <span class="admin-meta-label">لون</span>
-        <input type="text" class="admin-meta-input" data-field="colors" value="${escapeHtml(colors)}" placeholder="أبيض، بيج" />
-      </div>
-    </div>`;
+    const priceDisplay = img.price ? `${Number(img.price).toLocaleString()} د.ع` : '';
+    const stockDisplay = img.quantity != null ? img.quantity : 0;
+    metaHtml = `<div class="admin-readymade-summary">
+      ${priceDisplay ? `<span class="rm-summary-price">${priceDisplay}</span>` : ''}
+      <span class="rm-summary-stock">${stockDisplay} قطعة</span>
+    </div>
+    <button class="btn-edit-item" title="تعديل المنتج">✎</button>`;
   }
 
   item.innerHTML = `
@@ -555,31 +539,17 @@ function buildImageItem(img, category) {
     });
   }
 
-  // Save ready-made meta fields on change
-  item.querySelectorAll('.admin-readymade-meta .admin-meta-input').forEach(input => {
-    input.addEventListener('click', e => e.stopPropagation());
-    input.addEventListener('change', async () => {
-      const field = input.dataset.field;
-      let val;
-      if (field === 'price' || field === 'quantity') {
-        val = Number(input.value) || 0;
-      } else {
-        // sizes/colors: split by comma (Arabic or English)
-        val = input.value.split(/[,،]/).map(s => s.trim()).filter(Boolean);
-      }
-      try {
-        await updateDoc(doc(db, 'images', img.id), { [field]: val });
-        img[field] = val;
-        showToast('تم الحفظ', 'success');
-      } catch (err) {
-        console.error(err);
-        showToast('تعذّر الحفظ', 'error');
-      }
+  // Edit button for ready-made items
+  const editBtn = item.querySelector('.btn-edit-item');
+  if (editBtn) {
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openEditDrawer(img, category, item);
     });
-  });
+  }
 
   item.addEventListener('click', (e) => {
-    if (e.target.closest('.btn-delete-img') || e.target.closest('.admin-price-wrap') || e.target.closest('.admin-readymade-meta')) return;
+    if (e.target.closest('.btn-delete-img') || e.target.closest('.admin-price-wrap') || e.target.closest('.btn-edit-item') || e.target.closest('.admin-readymade-summary')) return;
     toggleSelectImage(img, category, item);
   });
 
@@ -770,6 +740,206 @@ selDuplicateBtn.addEventListener('click', async () => {
   selectedImages = [];
   selectionPanel.classList.remove('show');
   for (const cat of affectedCategories) await loadPhotos(cat);
+});
+
+
+// =====================
+// Edit Drawer (Ready-Made)
+// =====================
+let editDrawerImageData = null;
+
+const editDrawer    = document.getElementById('edit-drawer');
+const editBackdrop  = document.getElementById('edit-drawer-backdrop');
+const editDrawerImg = document.getElementById('edit-drawer-img');
+const editDesc      = document.getElementById('edit-description');
+const editPrice     = document.getElementById('edit-price');
+const editQty       = document.getElementById('edit-quantity');
+const editSizesWrap = document.getElementById('edit-sizes');
+const editColorsWrap = document.getElementById('edit-colors');
+const editCustomColorsWrap = document.getElementById('edit-custom-colors');
+const editCustomColorInput = document.getElementById('edit-custom-color');
+const btnAddCustomColor    = document.getElementById('btn-add-custom-color');
+const editSaveBtn   = document.getElementById('edit-save-btn');
+const editCloseBtn  = document.getElementById('edit-drawer-close');
+
+// Predefined color values (must match HTML chips data-value)
+const PREDEFINED_COLORS = ['أبيض','بيج','رمادي','أسود','كحلي','سكري','زيتي','بني','سماوي','خمري'];
+
+function openEditDrawer(img, category, element) {
+  editDrawerImageData = { img, category, element };
+
+  // Populate fields
+  editDrawerImg.src = img.storageUrl || '';
+  editDesc.value = img.description || '';
+  editPrice.value = img.price || '';
+  editQty.value = img.quantity != null ? img.quantity : '';
+
+  // Activate size chips
+  const sizes = Array.isArray(img.sizes) ? img.sizes : [];
+  editSizesWrap.querySelectorAll('.edit-chip').forEach(chip => {
+    chip.classList.toggle('active', sizes.includes(chip.dataset.value));
+  });
+
+  // Activate color chips
+  const colors = Array.isArray(img.colors) ? img.colors : [];
+  editColorsWrap.querySelectorAll('.edit-chip').forEach(chip => {
+    chip.classList.toggle('active', colors.includes(chip.dataset.value));
+  });
+
+  // Add custom color chips for non-predefined colors
+  editCustomColorsWrap.innerHTML = '';
+  colors.forEach(c => {
+    if (!PREDEFINED_COLORS.includes(c)) {
+      addCustomColorChip(c);
+    }
+  });
+
+  // Show drawer
+  editDrawer.classList.add('show');
+  editBackdrop.classList.add('show');
+  document.body.classList.add('edit-drawer-open');
+}
+
+function closeEditDrawer() {
+  editDrawer.classList.remove('show');
+  editBackdrop.classList.remove('show');
+  document.body.classList.remove('edit-drawer-open');
+  editDrawerImageData = null;
+  editCustomColorsWrap.innerHTML = '';
+  editCustomColorInput.value = '';
+  editSaveBtn.classList.remove('success');
+  editSaveBtn.disabled = false;
+  editSaveBtn.textContent = 'حفظ التعديلات';
+}
+
+async function saveEditDrawer() {
+  if (!editDrawerImageData) return;
+
+  const description = editDesc.value.trim();
+  const price = Number(editPrice.value) || 0;
+  const quantity = Number(editQty.value) || 0;
+
+  // Collect active sizes
+  const sizes = [];
+  editSizesWrap.querySelectorAll('.edit-chip.active').forEach(chip => {
+    sizes.push(chip.dataset.value);
+  });
+
+  // Collect active colors (predefined + custom)
+  const colors = [];
+  editColorsWrap.querySelectorAll('.edit-chip.active').forEach(chip => {
+    colors.push(chip.dataset.value);
+  });
+  editCustomColorsWrap.querySelectorAll('.edit-chip').forEach(chip => {
+    colors.push(chip.dataset.value);
+  });
+
+  editSaveBtn.disabled = true;
+  editSaveBtn.textContent = 'جارٍ الحفظ...';
+
+  try {
+    await updateDoc(doc(db, 'images', editDrawerImageData.img.id), {
+      description, price, quantity, sizes, colors
+    });
+
+    // Update in-memory data
+    const img = editDrawerImageData.img;
+    img.description = description;
+    img.price = price;
+    img.quantity = quantity;
+    img.sizes = sizes;
+    img.colors = colors;
+
+    // Update summary badge on card
+    const summary = editDrawerImageData.element.querySelector('.admin-readymade-summary');
+    if (summary) {
+      const priceDisplay = price ? `${Number(price).toLocaleString()} د.ع` : '';
+      summary.innerHTML = `
+        ${priceDisplay ? `<span class="rm-summary-price">${priceDisplay}</span>` : ''}
+        <span class="rm-summary-stock">${quantity} قطعة</span>
+      `;
+    }
+
+    // Success feedback
+    editSaveBtn.textContent = 'تم الحفظ ✓';
+    editSaveBtn.classList.add('success');
+    showToast('تم حفظ التعديلات', 'success');
+
+    setTimeout(() => closeEditDrawer(), 600);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر حفظ التعديلات', 'error');
+    editSaveBtn.disabled = false;
+    editSaveBtn.textContent = 'حفظ التعديلات';
+  }
+}
+
+function addCustomColorChip(colorName) {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'edit-chip active';
+  chip.dataset.value = colorName;
+  chip.innerHTML = `${escapeHtml(colorName)} <span class="chip-remove">✕</span>`;
+  chip.querySelector('.chip-remove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    chip.remove();
+  });
+  editCustomColorsWrap.appendChild(chip);
+}
+
+// Chip toggle — sizes
+editSizesWrap.addEventListener('click', e => {
+  const chip = e.target.closest('.edit-chip');
+  if (chip) chip.classList.toggle('active');
+});
+
+// Chip toggle — colors
+editColorsWrap.addEventListener('click', e => {
+  const chip = e.target.closest('.edit-chip');
+  if (chip) chip.classList.toggle('active');
+});
+
+// Add custom color
+function handleAddCustomColor() {
+  const val = editCustomColorInput.value.trim();
+  if (!val) return;
+  // Check if it matches a predefined color — just activate it
+  const predefined = editColorsWrap.querySelector(`.edit-chip[data-value="${val}"]`);
+  if (predefined) {
+    predefined.classList.add('active');
+    editCustomColorInput.value = '';
+    return;
+  }
+  // Check for duplicates in custom chips
+  const existing = editCustomColorsWrap.querySelector(`.edit-chip[data-value="${val}"]`);
+  if (existing) {
+    editCustomColorInput.value = '';
+    return;
+  }
+  addCustomColorChip(val);
+  editCustomColorInput.value = '';
+}
+
+btnAddCustomColor.addEventListener('click', handleAddCustomColor);
+editCustomColorInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); handleAddCustomColor(); }
+});
+
+// Save button
+editSaveBtn.addEventListener('click', saveEditDrawer);
+
+// Close handlers
+editCloseBtn.addEventListener('click', closeEditDrawer);
+editBackdrop.addEventListener('click', closeEditDrawer);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && editDrawerImageData) closeEditDrawer();
+});
+
+// Close drawer on tab switch
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (editDrawerImageData) closeEditDrawer();
+  });
 });
 
 

@@ -1158,64 +1158,353 @@ img { display: block; max-width: 100%; }
 }
 
 /* =====================
-   Ready-Made Meta Panel
+   Ready-Made Summary Badge (on image cards)
    ===================== */
-.admin-readymade-meta {
+.admin-readymade-summary {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 5;
-  background: rgba(11,28,61,0.88);
-  padding: 6px 6px 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.admin-meta-row {
+  background: linear-gradient(transparent, rgba(11,28,61,0.85));
+  padding: 20px 8px 6px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  pointer-events: none;
 }
 
-.admin-meta-label {
-  color: rgba(255,255,255,0.5);
-  font-size: 0.55rem;
-  font-weight: 600;
-  white-space: nowrap;
-  min-width: 32px;
-}
-
-.admin-meta-input {
-  flex: 1;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 4px;
-  color: var(--gold);
-  font-family: 'Cairo', sans-serif;
-  font-size: 0.6rem;
+.rm-summary-price {
+  font-size: 0.8rem;
   font-weight: 700;
-  padding: 2px 4px;
-  text-align: center;
+  color: var(--gold);
+}
+
+.rm-summary-stock {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.7);
+}
+
+.btn-edit-item {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  z-index: 6;
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: background var(--transition), transform var(--transition);
+  opacity: 0;
+  transition: opacity var(--transition), background var(--transition), transform var(--transition);
+}
+
+.admin-image-item:hover .btn-edit-item {
+  opacity: 1;
+}
+
+.btn-edit-item:hover {
+  background: var(--gold-light);
+  transform: scale(1.1);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .btn-edit-item {
+    opacity: 1;
+  }
+}
+
+/* =====================
+   Edit Drawer
+   ===================== */
+.edit-drawer {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  bottom: 0;
+  width: 380px;
+  background: #fff;
+  z-index: 100;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  transform: translateX(-100%);
+  transition: transform 0.3s ease, visibility 0.3s;
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.edit-drawer.show {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.edit-drawer-header {
+  background: var(--navy);
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.edit-drawer-title {
+  color: var(--gold);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.edit-drawer-close {
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.7);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+  flex-shrink: 0;
+}
+
+.edit-drawer-close:hover {
+  border-color: var(--danger);
+  color: #ff8a80;
+  background: rgba(229,57,53,0.15);
+}
+
+.edit-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.edit-drawer-preview {
+  width: 100%;
+  max-height: 200px;
+  background: var(--cream-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-drawer-preview img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+.edit-field {
+  margin-bottom: 1.25rem;
+}
+
+.edit-field-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.5rem;
+}
+
+.edit-field-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 16px;
+  color: var(--navy);
+  transition: border-color var(--transition);
+  direction: rtl;
+}
+
+.edit-field-input:focus {
   outline: none;
-  -moz-appearance: textfield;
-  min-width: 0;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
 }
 
-.admin-meta-input::-webkit-outer-spin-button,
-.admin-meta-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+.edit-price-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.admin-meta-input:focus {
+.edit-price-input {
+  flex: 1;
+}
+
+.edit-price-unit {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+/* Chips */
+.edit-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.edit-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--cream);
+  color: var(--navy);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
+  user-select: none;
+  gap: 0.35rem;
+}
+
+.edit-chip:hover {
   border-color: var(--gold);
 }
 
-.admin-meta-input::placeholder {
-  color: rgba(255,255,255,0.35);
-  font-size: 0.55rem;
+.edit-chip.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.edit-chip .chip-remove {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.edit-chip .chip-remove:hover {
+  opacity: 1;
+}
+
+/* Custom color input row */
+.edit-custom-color-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.edit-custom-color-row .edit-field-input {
+  flex: 1;
+}
+
+.btn-add-custom-color {
+  background: var(--gold);
+  color: var(--navy);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--transition);
+  min-height: 44px;
+}
+
+.btn-add-custom-color:hover {
+  background: var(--gold-light);
+}
+
+.edit-custom-chips {
+  margin-top: 0.5rem;
+}
+
+.edit-custom-chips:empty {
+  display: none;
+}
+
+/* Footer with save button */
+.edit-drawer-footer {
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border-top: 1px solid var(--cream-dark);
+  flex-shrink: 0;
+}
+
+.edit-save-btn {
+  width: 100%;
+  background: var(--navy);
+  color: var(--gold);
+  font-family: 'Cairo', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.85rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition);
+  min-height: 48px;
+}
+
+.edit-save-btn:hover {
+  background: var(--navy-light);
+  transform: translateY(-1px);
+}
+
+.edit-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.edit-save-btn.success {
+  background: var(--success);
+  color: #fff;
+}
+
+/* Backdrop */
+.edit-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(11,28,61,0.5);
+  z-index: 99;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+
+.edit-drawer-backdrop.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Prevent body scroll when drawer is open on mobile */
+body.edit-drawer-open {
+  overflow: hidden;
 }
 
 /* Touch devices — always show delete button */
@@ -1310,6 +1599,26 @@ img { display: block; max-width: 100%; }
   /* Allow scrolling past the bottom sheet when selection panel is open */
   body.sel-panel-open .admin-main {
     padding-bottom: 65vh;
+  }
+
+  /* Edit drawer — full screen on mobile */
+  .edit-drawer {
+    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 0;
+    z-index: 200;
+    transform: translateY(100%);
+  }
+
+  .edit-drawer.show {
+    transform: translateY(0);
+  }
+
+  .edit-drawer-preview img {
+    max-height: 150px;
   }
 }
 

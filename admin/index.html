@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة التحكم — شاكر</title>
-  <link rel="stylesheet" href="../css/admin.css?v=3" />
+  <link rel="stylesheet" href="../css/admin.css?v=4" />
 </head>
 <body>
 
@@ -224,13 +224,76 @@
     </div>
   </div>
 
+  <!-- Edit Drawer (ready-made item editing) -->
+  <div class="edit-drawer" id="edit-drawer">
+    <div class="edit-drawer-header">
+      <h2 class="edit-drawer-title">تعديل المنتج</h2>
+      <button class="edit-drawer-close" id="edit-drawer-close" title="إغلاق">✕</button>
+    </div>
+    <div class="edit-drawer-body">
+      <div class="edit-drawer-preview">
+        <img id="edit-drawer-img" src="" alt="" />
+      </div>
+      <div class="edit-field">
+        <label class="edit-field-label" for="edit-description">اسم المنتج / وصف</label>
+        <input type="text" id="edit-description" class="edit-field-input" placeholder="مثال: دشداشة صيفية بيضاء" />
+      </div>
+      <div class="edit-field">
+        <label class="edit-field-label" for="edit-price">السعر</label>
+        <div class="edit-price-row">
+          <input type="number" id="edit-price" class="edit-field-input edit-price-input" placeholder="0" min="0" step="500" inputmode="numeric" />
+          <span class="edit-price-unit">د.ع</span>
+        </div>
+      </div>
+      <div class="edit-field">
+        <label class="edit-field-label" for="edit-quantity">الكمية المتوفرة</label>
+        <input type="number" id="edit-quantity" class="edit-field-input" placeholder="0" min="0" step="1" inputmode="numeric" />
+      </div>
+      <div class="edit-field">
+        <label class="edit-field-label">المقاسات</label>
+        <div class="edit-chips" id="edit-sizes">
+          <button type="button" class="edit-chip" data-value="S">S</button>
+          <button type="button" class="edit-chip" data-value="M">M</button>
+          <button type="button" class="edit-chip" data-value="L">L</button>
+          <button type="button" class="edit-chip" data-value="XL">XL</button>
+          <button type="button" class="edit-chip" data-value="XXL">XXL</button>
+          <button type="button" class="edit-chip" data-value="3XL">3XL</button>
+        </div>
+      </div>
+      <div class="edit-field">
+        <label class="edit-field-label">الألوان</label>
+        <div class="edit-chips" id="edit-colors">
+          <button type="button" class="edit-chip" data-value="أبيض">أبيض</button>
+          <button type="button" class="edit-chip" data-value="بيج">بيج</button>
+          <button type="button" class="edit-chip" data-value="رمادي">رمادي</button>
+          <button type="button" class="edit-chip" data-value="أسود">أسود</button>
+          <button type="button" class="edit-chip" data-value="كحلي">كحلي</button>
+          <button type="button" class="edit-chip" data-value="سكري">سكري</button>
+          <button type="button" class="edit-chip" data-value="زيتي">زيتي</button>
+          <button type="button" class="edit-chip" data-value="بني">بني</button>
+          <button type="button" class="edit-chip" data-value="سماوي">سماوي</button>
+          <button type="button" class="edit-chip" data-value="خمري">خمري</button>
+        </div>
+        <div class="edit-custom-color-row">
+          <input type="text" id="edit-custom-color" class="edit-field-input" placeholder="لون آخر..." />
+          <button type="button" class="btn-add-custom-color" id="btn-add-custom-color">+ إضافة</button>
+        </div>
+        <div class="edit-chips edit-custom-chips" id="edit-custom-colors"></div>
+      </div>
+    </div>
+    <div class="edit-drawer-footer">
+      <button type="button" class="edit-save-btn" id="edit-save-btn">حفظ التعديلات</button>
+    </div>
+  </div>
+  <div class="edit-drawer-backdrop" id="edit-drawer-backdrop"></div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <!-- Scripts -->
   <script type="module">
     try {
-      await import('../js/admin.js?v=8');
+      await import('../js/admin.js?v=9');
     } catch (err) {
       alert('Script error: ' + err.message);
       console.error(err);
