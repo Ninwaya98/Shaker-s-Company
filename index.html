@@ -150,42 +150,42 @@
             <div class="measure-row">
               <label for="m-length">الطول الكلي</label>
               <div class="measure-input-wrap">
-                <input type="number" id="m-length" class="measure-input" placeholder="مثال: 130" min="1" max="200" />
+                <input type="number" id="m-length" class="measure-input" inputmode="numeric" placeholder="مثال: 130" min="1" max="200" />
                 <span class="measure-unit">سم</span>
               </div>
             </div>
             <div class="measure-row">
               <label for="m-chest">الصدر</label>
               <div class="measure-input-wrap">
-                <input type="number" id="m-chest" class="measure-input" placeholder="مثال: 110" min="1" max="200" />
+                <input type="number" id="m-chest" class="measure-input" inputmode="numeric" placeholder="مثال: 110" min="1" max="200" />
                 <span class="measure-unit">سم</span>
               </div>
             </div>
             <div class="measure-row">
               <label for="m-shoulder">الكتف</label>
               <div class="measure-input-wrap">
-                <input type="number" id="m-shoulder" class="measure-input" placeholder="مثال: 48" min="1" max="100" />
+                <input type="number" id="m-shoulder" class="measure-input" inputmode="numeric" placeholder="مثال: 48" min="1" max="100" />
                 <span class="measure-unit">سم</span>
               </div>
             </div>
             <div class="measure-row">
               <label for="m-neck">الياخة</label>
               <div class="measure-input-wrap">
-                <input type="number" id="m-neck" class="measure-input" placeholder="مثال: 42" min="1" max="100" />
+                <input type="number" id="m-neck" class="measure-input" inputmode="numeric" placeholder="مثال: 42" min="1" max="100" />
                 <span class="measure-unit">سم</span>
               </div>
             </div>
             <div class="measure-row">
               <label for="m-sleeve-len">طول الردن</label>
               <div class="measure-input-wrap">
-                <input type="number" id="m-sleeve-len" class="measure-input" placeholder="مثال: 65" min="1" max="120" />
+                <input type="number" id="m-sleeve-len" class="measure-input" inputmode="numeric" placeholder="مثال: 65" min="1" max="120" />
                 <span class="measure-unit">سم</span>
               </div>
             </div>
             <div class="measure-row">
               <label for="m-sleeve-w">عرض الردن</label>
               <div class="measure-input-wrap">
-                <input type="number" id="m-sleeve-w" class="measure-input" placeholder="مثال: 28" min="1" max="80" />
+                <input type="number" id="m-sleeve-w" class="measure-input" inputmode="numeric" placeholder="مثال: 28" min="1" max="80" />
                 <span class="measure-unit">سم</span>
               </div>
             </div>
@@ -248,30 +248,33 @@
           <textarea id="m-notes" class="measure-notes" placeholder="أي تفاصيل أو طلبات خاصة..." rows="3"></textarea>
         </div>
 
-        <!-- Customer Info (optional) -->
-        <div class="customer-info-wrap">
-          <p class="customer-info-hint">معلومات التواصل <span>(اختياري — لمتابعة طلبك)</span></p>
-          <div class="customer-info-fields">
-            <div class="customer-field">
-              <label for="c-name">الاسم</label>
-              <input type="text" id="c-name" class="customer-input" placeholder="اسمك الكريم" autocomplete="name" />
-            </div>
-            <div class="customer-field">
-              <label for="c-phone">رقم الهاتف</label>
-              <input type="tel" id="c-phone" class="customer-input" placeholder="07XXXXXXXXX" dir="ltr" autocomplete="tel" />
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      <!-- Tailored gallery (below form — for fabric selection) -->
-      <div class="fabric-gallery-label">اختر قماشاً من المعرض (اختياري)</div>
+      <!-- Tailored gallery (for fabric selection) -->
+      <div class="fabric-gallery-label">اختر قماشاً من المعرض</div>
       <div id="sections-tailored">
         <div class="spinner"></div>
       </div>
 
-      <!-- Submit (after fabric gallery so customer scrolls past fabrics first) -->
+      <!-- Customer Info (after fabric, before submit) -->
+      <div class="customer-info-wrap">
+        <p class="customer-info-hint">معلومات التواصل</p>
+        <div class="customer-info-fields">
+          <div class="customer-field">
+            <label for="c-name">الاسم</label>
+            <input type="text" id="c-name" class="customer-input" placeholder="اسمك الكريم" autocomplete="name" required />
+          </div>
+          <div class="customer-field">
+            <label for="c-phone">رقم الهاتف</label>
+            <input type="tel" id="c-phone" class="customer-input" placeholder="07XXXXXXXXX" dir="ltr" inputmode="numeric" autocomplete="tel" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- Validation Error (shown when fields missing) -->
+      <div id="order-error" class="order-error" style="display:none"></div>
+
+      <!-- Submit -->
       <button id="place-order-btn" type="button">
         <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>
         أرسل الطلب

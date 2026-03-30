@@ -225,37 +225,75 @@ async function saveOrderToFirestore(measurements, fabricUrl, notes, customerName
 }
 
 async function submitOrder() {
-  // Validate measurements
-  let valid = true;
+  const errorBox = document.getElementById('order-error');
+  const missing = [];
+
+  // 1. Validate measurements
   const values = measureFields.map(f => {
     const el = document.getElementById(f.id);
     el.classList.remove('input-error');
     const v = el.value.trim();
     if (!v || Number(v) <= 0) {
       el.classList.add('input-error');
-      void el.offsetWidth;
-      valid = false;
+      missing.push(f.label);
       return null;
     }
     return { label: f.label, value: v };
   });
 
-  if (!valid) {
-    const firstError = document.querySelector('.measure-input.input-error');
-    if (firstError) {
-      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      firstError.focus();
-    }
+  // 2. Validate collar
+  const collarSelector = document.getElementById('collar-selector');
+  collarSelector.classList.remove('input-error');
+  if (!selectedCollar) {
+    collarSelector.classList.add('input-error');
+    missing.push('نوع الياخة');
+  }
+
+  // 3. Validate pocket
+  const pocketSelector = document.getElementById('pocket-selector');
+  pocketSelector.classList.remove('input-error');
+  if (!selectedPocket) {
+    pocketSelector.classList.add('input-error');
+    missing.push('نوع الجيب');
+  }
+
+  // 4. Validate fabric selection
+  if (!selectedFabric) {
+    missing.push('اختيار القماش');
+  }
+
+  // 5. Validate name
+  const nameEl = document.getElementById('c-name');
+  nameEl.classList.remove('input-error');
+  const customerName = nameEl.value.trim();
+  if (!customerName) {
+    nameEl.classList.add('input-error');
+    missing.push('الاسم');
+  }
+
+  // 6. Validate phone
+  const phoneEl = document.getElementById('c-phone');
+  phoneEl.classList.remove('input-error');
+  const customerPhone = phoneEl.value.trim();
+  if (!customerPhone) {
+    phoneEl.classList.add('input-error');
+    missing.push('رقم الهاتف');
+  }
+
+  // Show errors if any
+  if (missing.length > 0) {
+    errorBox.innerHTML = '⚠️ يرجى إكمال الحقول التالية:<br>' + missing.map(m => `• ${m}`).join('<br>');
+    errorBox.style.display = 'block';
+    errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return;
   }
 
+  errorBox.style.display = 'none';
   const btn = document.getElementById('place-order-btn');
   btn.disabled = true;
 
-  const customerName  = document.getElementById('c-name').value.trim();
-  const customerPhone = document.getElementById('c-phone').value.trim();
-  const notes         = document.getElementById('m-notes').value.trim();
-  const fabricUrl     = selectedFabric ? selectedFabric.url : '';
+  const notes    = document.getElementById('m-notes').value.trim();
+  const fabricUrl = selectedFabric.url;
 
   // Save to Firestore
   const docId = await saveOrderToFirestore(values, fabricUrl, notes, customerName, customerPhone);
@@ -297,14 +335,19 @@ document.getElementById('new-order-btn').addEventListener('click', () => {
   // Reset notes & customer info
   document.getElementById('m-notes').value = '';
   document.getElementById('c-name').value = '';
+  document.getElementById('c-name').classList.remove('input-error');
   document.getElementById('c-phone').value = '';
+  document.getElementById('c-phone').classList.remove('input-error');
   // Clear fabric selection
   clearFabric();
   // Clear collar & pocket selections
   selectedCollar = null;
   selectedPocket = null;
   document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
-  // Show submit button, hide confirmation
+  document.getElementById('collar-selector').classList.remove('input-error');
+  document.getElementById('pocket-selector').classList.remove('input-error');
+  // Hide error & confirmation, show submit button
+  document.getElementById('order-error').style.display = 'none';
   document.getElementById('place-order-btn').style.display = 'flex';
   document.getElementById('order-confirmation').style.display = 'none';
   // Scroll to form

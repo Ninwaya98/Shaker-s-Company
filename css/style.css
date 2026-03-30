@@ -899,6 +899,17 @@ nav a:hover {
   position: relative;
 }
 
+.style-selector.input-error .style-options-scroll {
+  border: 2px solid #e74c3c;
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.customer-input.input-error {
+  border-color: #e74c3c;
+  background: #fff8f8;
+}
+
 /* Notes */
 .measure-notes-wrap {
   margin-top: 1.5rem;
@@ -956,6 +967,21 @@ nav a:hover {
 #place-order-btn:hover {
   background: #b8953e;
   transform: translateY(-2px);
+}
+
+/* Order validation error */
+.order-error {
+  background: #fff0f0;
+  border: 1px solid #e74c3c;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 1rem auto 0;
+  max-width: 480px;
+  color: #c0392b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.8;
+  text-align: right;
 }
 
 /* Fabric selected highlight on gallery card */
