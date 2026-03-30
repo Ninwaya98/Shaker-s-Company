@@ -804,6 +804,104 @@ nav a:hover {
   75%      { transform: translateX(4px); }
 }
 
+/* =====================
+   Style Selectors (Collar / Pocket)
+   ===================== */
+.style-selector {
+  margin-top: 1.75rem;
+}
+
+.style-selector-label {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 0.75rem;
+}
+
+.style-options-scroll {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar but keep functionality */
+.style-options-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+.style-options-scroll::-webkit-scrollbar-track {
+  background: var(--cream-dark);
+  border-radius: 4px;
+}
+.style-options-scroll::-webkit-scrollbar-thumb {
+  background: var(--gold);
+  border-radius: 4px;
+}
+
+.style-option {
+  flex-shrink: 0;
+  width: 100px;
+  background: #fff;
+  border: 2px solid var(--cream-dark);
+  border-radius: var(--radius);
+  padding: 0.6rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  scroll-snap-align: start;
+  font-family: 'Cairo', sans-serif;
+}
+
+.style-option img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.style-option span {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.style-option:hover {
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(201,168,76,0.2);
+}
+
+.style-option.selected {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.08);
+  box-shadow: 0 2px 12px rgba(201,168,76,0.25);
+}
+
+.style-option.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: var(--gold);
+  color: var(--navy);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.style-option {
+  position: relative;
+}
+
 /* Notes */
 .measure-notes-wrap {
   margin-top: 1.5rem;

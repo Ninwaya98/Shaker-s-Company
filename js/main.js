@@ -153,6 +153,31 @@ function clearFabric() {
 
 document.getElementById('clear-fabric-btn').addEventListener('click', clearFabric);
 
+// ---- Collar & Pocket Selection ----
+let selectedCollar = null; // data-value string
+let selectedPocket = null;
+
+document.querySelectorAll('.style-option').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const type = btn.dataset.type; // 'collar' or 'pocket'
+    const value = btn.dataset.value;
+
+    // Deselect siblings of the same type
+    document.querySelectorAll(`.style-option[data-type="${type}"]`).forEach(b => b.classList.remove('selected'));
+
+    // Toggle: if same button clicked again, deselect
+    if ((type === 'collar' && selectedCollar === value) || (type === 'pocket' && selectedPocket === value)) {
+      if (type === 'collar') selectedCollar = null;
+      else selectedPocket = null;
+      return;
+    }
+
+    btn.classList.add('selected');
+    if (type === 'collar') selectedCollar = value;
+    else selectedPocket = value;
+  });
+});
+
 // ---- Order Form ----
 const measureFields = [
   { id: 'm-length',    label: 'الطول الكلي' },
@@ -193,11 +218,17 @@ function buildOrderMessage() {
   const notes   = document.getElementById('m-notes').value.trim() || 'لا يوجد';
   const fabric  = selectedFabric ? selectedFabric.url : 'لم يُحدد';
 
+  const collar = selectedCollar ? `ياخة ${selectedCollar}` : 'لم يُحدد';
+  const pocket = selectedPocket ? `جيب ${selectedPocket}` : 'لم يُحدد';
+
   const lines = [
     'طلب فصال جديد 🪡',
     '━━━━━━━━━━━━━━━━',
     'القياسات (سم):',
     ...values.map(v => `• ${v.label}: ${v.value}`),
+    '━━━━━━━━━━━━━━━━',
+    `نوع الياخة: ${collar}`,
+    `نوع الجيب: ${pocket}`,
     '━━━━━━━━━━━━━━━━',
     `القماش المختار: ${fabric}`,
     '━━━━━━━━━━━━━━━━',
@@ -221,9 +252,11 @@ async function saveOrderToFirestore(measurements, fabricUrl, notes, customerName
           sleeveLength: { stringValue: measurements[4].value },
           sleeveWidth:  { stringValue: measurements[5].value },
         }}},
-        fabricUrl:  { stringValue: fabricUrl || '' },
-        notes:      { stringValue: notes || '' },
-        status:     { stringValue: 'new' },
+        fabricUrl:   { stringValue: fabricUrl || '' },
+        collarType:  { stringValue: selectedCollar || '' },
+        pocketType:  { stringValue: selectedPocket || '' },
+        notes:       { stringValue: notes || '' },
+        status:      { stringValue: 'new' },
         createdAt:  { timestampValue: new Date().toISOString() },
         updatedAt:  { timestampValue: new Date().toISOString() },
       }
@@ -304,6 +337,10 @@ document.getElementById('new-order-btn').addEventListener('click', () => {
   document.getElementById('c-phone').value = '';
   // Clear fabric selection
   clearFabric();
+  // Clear collar & pocket selections
+  selectedCollar = null;
+  selectedPocket = null;
+  document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
   // Show submit button, hide confirmation
   document.getElementById('order-whatsapp-btn').style.display = 'flex';
   document.getElementById('order-confirmation').style.display = 'none';
