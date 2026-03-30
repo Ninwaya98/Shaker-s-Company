@@ -350,9 +350,10 @@ async function submitOrder() {
     fabricPrice: orderPayload.fabricPrice,
     collarType: orderPayload.collarType,
     pocketType: orderPayload.pocketType,
-    notes: notes || '',
-    measurements: JSON.stringify(values)
+    notes: notes || ''
   });
+  // Add each measurement as its own param
+  values.forEach(v => { if (v) n8nParams.set(v.label, v.value); });
   fetch(`https://n8n.srv1411989.hstgr.cloud/webhook/fd60b297-e889-45f4-aef4-cb0e74a6e3d8?${n8nParams}`)
     .catch(() => {});
 
