@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة التحكم — شاكر</title>
-  <link rel="stylesheet" href="../css/admin.css?v=4" />
+  <link rel="stylesheet" href="../css/admin.css?v=5" />
 </head>
 <body>
 
@@ -224,6 +224,79 @@
     </div>
   </div>
 
+  <!-- Upload Modal (ready-made — mandatory fields) -->
+  <div class="upload-modal" id="upload-modal">
+    <div class="upload-modal-header">
+      <h2 class="upload-modal-title">إضافة منتج جديد</h2>
+      <span class="upload-modal-counter" id="upload-modal-counter"></span>
+      <button class="upload-modal-close" id="upload-modal-close" title="إلغاء">✕</button>
+    </div>
+    <div class="upload-modal-body">
+      <div class="upload-modal-preview">
+        <img id="upload-modal-img" src="" alt="" />
+      </div>
+      <div class="edit-field" id="um-field-name">
+        <label class="edit-field-label">اسم المنتج <span class="required-star">*</span></label>
+        <input type="text" id="um-name" class="edit-field-input" placeholder="مثال: دشداشة صيفية بيضاء" />
+        <span class="field-error">مطلوب</span>
+      </div>
+      <div class="edit-field" id="um-field-section">
+        <label class="edit-field-label">القسم <span class="required-star">*</span></label>
+        <select id="um-section" class="edit-field-input upload-section-select"></select>
+      </div>
+      <div class="edit-field" id="um-field-price">
+        <label class="edit-field-label">السعر <span class="required-star">*</span></label>
+        <div class="edit-price-row">
+          <input type="number" id="um-price" class="edit-field-input edit-price-input" placeholder="0" min="0" step="500" inputmode="numeric" />
+          <span class="edit-price-unit">د.ع</span>
+        </div>
+        <span class="field-error">مطلوب</span>
+      </div>
+      <div class="edit-field" id="um-field-quantity">
+        <label class="edit-field-label">الكمية <span class="required-star">*</span></label>
+        <input type="number" id="um-quantity" class="edit-field-input" placeholder="1" min="1" step="1" inputmode="numeric" />
+        <span class="field-error">مطلوب</span>
+      </div>
+      <div class="edit-field" id="um-field-sizes">
+        <label class="edit-field-label">المقاسات <span class="required-star">*</span></label>
+        <div class="edit-chips" id="um-sizes">
+          <button type="button" class="edit-chip" data-value="S">S</button>
+          <button type="button" class="edit-chip" data-value="M">M</button>
+          <button type="button" class="edit-chip" data-value="L">L</button>
+          <button type="button" class="edit-chip" data-value="XL">XL</button>
+          <button type="button" class="edit-chip" data-value="XXL">XXL</button>
+          <button type="button" class="edit-chip" data-value="3XL">3XL</button>
+        </div>
+        <span class="field-error">اختر مقاس واحد على الأقل</span>
+      </div>
+      <div class="edit-field" id="um-field-colors">
+        <label class="edit-field-label">الألوان <span class="required-star">*</span></label>
+        <div class="edit-chips" id="um-colors">
+          <button type="button" class="edit-chip" data-value="أبيض">أبيض</button>
+          <button type="button" class="edit-chip" data-value="بيج">بيج</button>
+          <button type="button" class="edit-chip" data-value="رمادي">رمادي</button>
+          <button type="button" class="edit-chip" data-value="أسود">أسود</button>
+          <button type="button" class="edit-chip" data-value="كحلي">كحلي</button>
+          <button type="button" class="edit-chip" data-value="سكري">سكري</button>
+          <button type="button" class="edit-chip" data-value="زيتي">زيتي</button>
+          <button type="button" class="edit-chip" data-value="بني">بني</button>
+          <button type="button" class="edit-chip" data-value="سماوي">سماوي</button>
+          <button type="button" class="edit-chip" data-value="خمري">خمري</button>
+        </div>
+        <div class="edit-custom-color-row">
+          <input type="text" id="um-custom-color" class="edit-field-input" placeholder="لون آخر..." />
+          <button type="button" class="btn-add-custom-color" id="um-btn-add-color">+ إضافة</button>
+        </div>
+        <div class="edit-chips edit-custom-chips" id="um-custom-colors"></div>
+        <span class="field-error">اختر لون واحد على الأقل</span>
+      </div>
+    </div>
+    <div class="upload-modal-footer">
+      <button type="button" class="edit-save-btn" id="um-submit-btn" disabled>إضافة المنتج</button>
+      <button type="button" class="um-skip-btn" id="um-skip-btn">تخطي ←</button>
+    </div>
+  </div>
+
   <!-- Edit Drawer (ready-made item editing) -->
   <div class="edit-drawer" id="edit-drawer">
     <div class="edit-drawer-header">
@@ -293,7 +366,7 @@
   <!-- Scripts -->
   <script type="module">
     try {
-      await import('../js/admin.js?v=9');
+      await import('../js/admin.js?v=10');
     } catch (err) {
       alert('Script error: ' + err.message);
       console.error(err);

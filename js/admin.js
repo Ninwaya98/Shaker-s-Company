@@ -341,6 +341,15 @@ async function quickUpload(files, category) {
     if (!confirm(`هذه الصور كبيرة الحجم (أكثر من 5MB):\n${names}\n\nهل تريد المتابعة؟`)) return;
   }
 
+  // Ready-made: redirect to upload modal with mandatory fields
+  if (category === 'ready-made') {
+    uploadQueue = Array.from(files);
+    uploadQueueIndex = 0;
+    document.getElementById(`quick-file-${category}`).value = '';
+    showUploadModal();
+    return;
+  }
+
   const progressWrap = document.getElementById(`quick-progress-${category}`);
   const progressBar  = document.getElementById(`quick-bar-${category}`);
 
@@ -383,12 +392,6 @@ async function quickUpload(files, category) {
                 fileName: file.name, description: '', order: orderCounter,
                 createdAt: serverTimestamp()
               };
-              if (category === 'ready-made') {
-                imgDoc.price = 0;
-                imgDoc.quantity = 0;
-                imgDoc.sizes = [];
-                imgDoc.colors = [];
-              }
               await addDoc(collection(db, 'images'), imgDoc);
               done++;
               progressBar.style.width = `${Math.round((done / fileArr.length) * 100)}%`;
@@ -425,8 +428,13 @@ async function loadPhotos(category) {
   grid.innerHTML = '<div class="loading-text">جارٍ التحميل...</div>';
   allImageItems[category] = [];
 
+  // Hide grid toolbar for ready-made (uses inventory table instead)
+  const gridToolbar = document.getElementById(`grid-toolbar-${category}`);
+  if (gridToolbar) gridToolbar.style.display = category === 'ready-made' ? 'none' : '';
+
   try {
     const sections = sectionsCache[category];
+    let allSectionImages = []; // for inventory table
     let hasAnyImages = false;
     grid.innerHTML = '';
 
@@ -442,6 +450,15 @@ async function loadPhotos(category) {
       const images = imgsSnap.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      // For ready-made: collect for inventory table
+      if (category === 'ready-made') {
+        allSectionImages.push({ section, images });
+        images.forEach(img => {
+          allImageItems[category].push({ img, element: null });
+        });
+        continue;
+      }
 
       const header = document.createElement('div');
       header.className = 'photo-section-header';
@@ -464,6 +481,16 @@ async function loadPhotos(category) {
       });
 
       grid.appendChild(imgGrid);
+    }
+
+    // Ready-made: render inventory table
+    if (category === 'ready-made') {
+      if (allSectionImages.length === 0) {
+        grid.innerHTML = '<div class="loading-text">لا توجد منتجات. اضغط على المنطقة أعلاه لإضافة منتج جديد.</div>';
+      } else {
+        renderInventoryTable(grid, allSectionImages);
+      }
+      return;
     }
 
     if (!hasAnyImages) {
@@ -744,6 +771,364 @@ selDuplicateBtn.addEventListener('click', async () => {
 
 
 // =====================
+// Inventory Table (Ready-Made)
+// =====================
+function renderInventoryTable(container, sectionImages) {
+  // Desktop table
+  const tableWrap = document.createElement('div');
+  tableWrap.className = 'inventory-table-wrap';
+
+  let tableHtml = `<table class="inventory-table">
+    <thead><tr>
+      <th>صورة</th><th>اسم المنتج</th><th>السعر</th><th>الكمية</th>
+      <th>المقاسات</th><th>الألوان</th><th>الحالة</th><th>إجراءات</th>
+    </tr></thead><tbody>`;
+
+  sectionImages.forEach(({ section, images }) => {
+    tableHtml += `<tr class="inventory-section-header"><td colspan="8">${escapeHtml(section.name)} (${images.length})</td></tr>`;
+    images.forEach(img => {
+      const sizes = Array.isArray(img.sizes) ? img.sizes : [];
+      const colors = Array.isArray(img.colors) ? img.colors : [];
+      const price = img.price ? Number(img.price).toLocaleString() : '—';
+      const qty = img.quantity != null ? img.quantity : 0;
+      const statusClass = qty > 0 ? 'available' : 'sold-out';
+      const statusText = qty > 0 ? 'متوفر' : 'نفذت';
+      const name = img.description || img.fileName || '—';
+
+      tableHtml += `<tr data-id="${img.id}">
+        <td><img class="inventory-thumb" src="${img.storageUrl}" alt="" loading="lazy" /></td>
+        <td>${escapeHtml(name)}</td>
+        <td>${price} د.ع</td>
+        <td>${qty}</td>
+        <td><div class="inventory-chips">${sizes.map(s => `<span class="inventory-chip">${escapeHtml(s)}</span>`).join('')}</div></td>
+        <td><div class="inventory-chips">${colors.map(c => `<span class="inventory-chip">${escapeHtml(c)}</span>`).join('')}</div></td>
+        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+        <td><div class="inventory-actions">
+          <button class="btn-table-edit" data-imgid="${img.id}" title="تعديل">✎</button>
+          <button class="btn-table-delete" data-imgid="${img.id}" title="حذف">✕</button>
+        </div></td>
+      </tr>`;
+    });
+  });
+
+  tableHtml += '</tbody></table>';
+  tableWrap.innerHTML = tableHtml;
+  container.appendChild(tableWrap);
+
+  // Mobile card view
+  const cardsWrap = document.createElement('div');
+  cardsWrap.className = 'inventory-cards';
+
+  sectionImages.forEach(({ section, images }) => {
+    const secHeader = document.createElement('div');
+    secHeader.className = 'inventory-section-card-header';
+    secHeader.textContent = `${section.name} (${images.length})`;
+    cardsWrap.appendChild(secHeader);
+
+    images.forEach(img => {
+      const sizes = Array.isArray(img.sizes) ? img.sizes : [];
+      const colors = Array.isArray(img.colors) ? img.colors : [];
+      const price = img.price ? Number(img.price).toLocaleString() : '—';
+      const qty = img.quantity != null ? img.quantity : 0;
+      const statusClass = qty > 0 ? 'available' : 'sold-out';
+      const statusText = qty > 0 ? 'متوفر' : 'نفذت';
+      const name = img.description || img.fileName || '—';
+
+      const card = document.createElement('div');
+      card.className = 'inventory-card';
+      card.dataset.id = img.id;
+      card.innerHTML = `
+        <img class="inventory-card-thumb" src="${img.storageUrl}" alt="" loading="lazy" />
+        <div class="inventory-card-info">
+          <div class="inventory-card-name">${escapeHtml(name)}</div>
+          <div class="inventory-card-details">
+            <span>${price} د.ع</span>
+            <span>${qty} قطعة</span>
+          </div>
+          <div class="inventory-chips">${sizes.map(s => `<span class="inventory-chip">${escapeHtml(s)}</span>`).join('')} ${colors.map(c => `<span class="inventory-chip">${escapeHtml(c)}</span>`).join('')}</div>
+          <div class="inventory-card-bottom">
+            <span class="status-badge ${statusClass}">${statusText}</span>
+            <div class="inventory-actions">
+              <button class="btn-table-edit" data-imgid="${img.id}" title="تعديل">✎</button>
+              <button class="btn-table-delete" data-imgid="${img.id}" title="حذف">✕</button>
+            </div>
+          </div>
+        </div>
+      `;
+      cardsWrap.appendChild(card);
+    });
+  });
+
+  container.appendChild(cardsWrap);
+
+  // Wire up edit/delete buttons (both table and cards)
+  container.querySelectorAll('.btn-table-edit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const imgId = btn.dataset.imgid;
+      const found = allImageItems['ready-made'].find(i => i.img.id === imgId);
+      if (found) openEditDrawer(found.img, 'ready-made', btn.closest('tr') || btn.closest('.inventory-card'));
+    });
+  });
+
+  container.querySelectorAll('.btn-table-delete').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const imgId = btn.dataset.imgid;
+      const found = allImageItems['ready-made'].find(i => i.img.id === imgId);
+      if (!found) return;
+      if (!confirm('هل تريد حذف هذا المنتج؟')) return;
+      try {
+        if (found.img.storagePath) {
+          try { await deleteObject(ref(storage, found.img.storagePath)); } catch (_) {}
+        }
+        await deleteDoc(doc(db, 'images', imgId));
+        showToast('تم حذف المنتج', 'success');
+        await loadPhotos('ready-made');
+      } catch (err) {
+        console.error(err);
+        showToast('تعذّر حذف المنتج', 'error');
+      }
+    });
+  });
+}
+
+// =====================
+// Upload Modal (Ready-Made)
+// =====================
+let uploadQueue = [];
+let uploadQueueIndex = 0;
+
+const uploadModal     = document.getElementById('upload-modal');
+const umImg           = document.getElementById('upload-modal-img');
+const umCounter       = document.getElementById('upload-modal-counter');
+const umName          = document.getElementById('um-name');
+const umSection       = document.getElementById('um-section');
+const umPrice         = document.getElementById('um-price');
+const umQty           = document.getElementById('um-quantity');
+const umSizesWrap     = document.getElementById('um-sizes');
+const umColorsWrap    = document.getElementById('um-colors');
+const umCustomColors  = document.getElementById('um-custom-colors');
+const umCustomInput   = document.getElementById('um-custom-color');
+const umBtnAddColor   = document.getElementById('um-btn-add-color');
+const umSubmitBtn     = document.getElementById('um-submit-btn');
+const umSkipBtn       = document.getElementById('um-skip-btn');
+const umCloseBtn      = document.getElementById('upload-modal-close');
+
+function showUploadModal() {
+  if (uploadQueueIndex >= uploadQueue.length) {
+    closeUploadModal();
+    return;
+  }
+
+  const file = uploadQueue[uploadQueueIndex];
+
+  // Show image preview
+  const reader = new FileReader();
+  reader.onload = (e) => { umImg.src = e.target.result; };
+  reader.readAsDataURL(file);
+
+  // Counter
+  if (uploadQueue.length > 1) {
+    umCounter.textContent = `المنتج ${uploadQueueIndex + 1} من ${uploadQueue.length}`;
+    umSkipBtn.style.display = '';
+  } else {
+    umCounter.textContent = '';
+    umSkipBtn.style.display = 'none';
+  }
+
+  // Reset form fields
+  umName.value = '';
+  umPrice.value = '';
+  umQty.value = '';
+  umSizesWrap.querySelectorAll('.edit-chip').forEach(c => c.classList.remove('active'));
+  umColorsWrap.querySelectorAll('.edit-chip').forEach(c => c.classList.remove('active'));
+  umCustomColors.innerHTML = '';
+  umCustomInput.value = '';
+
+  // Populate section dropdown
+  const sections = sectionsCache['ready-made'];
+  const currentSel = getUploadSectionId('ready-made');
+  umSection.innerHTML = sections.map(s =>
+    `<option value="${s.id}" ${s.id === currentSel ? 'selected' : ''}>${escapeHtml(s.name)}${s.isDefault ? ' (رئيسي)' : ''}</option>`
+  ).join('');
+
+  // Clear validation
+  uploadModal.querySelectorAll('.edit-field.invalid').forEach(f => f.classList.remove('invalid'));
+  umSubmitBtn.disabled = true;
+  umSubmitBtn.textContent = 'إضافة المنتج';
+  umSubmitBtn.classList.remove('success');
+
+  // Show modal
+  uploadModal.classList.add('show');
+  document.body.classList.add('edit-drawer-open');
+}
+
+function closeUploadModal() {
+  uploadModal.classList.remove('show');
+  document.body.classList.remove('edit-drawer-open');
+  uploadQueue = [];
+  uploadQueueIndex = 0;
+}
+
+function validateUploadForm() {
+  let valid = true;
+  const fields = [
+    { id: 'um-field-name', check: () => umName.value.trim().length > 0 },
+    { id: 'um-field-price', check: () => Number(umPrice.value) > 0 },
+    { id: 'um-field-quantity', check: () => Number(umQty.value) >= 1 },
+    { id: 'um-field-sizes', check: () => umSizesWrap.querySelectorAll('.edit-chip.active').length > 0 },
+    { id: 'um-field-colors', check: () => umColorsWrap.querySelectorAll('.edit-chip.active').length > 0 || umCustomColors.querySelectorAll('.edit-chip').length > 0 },
+  ];
+
+  fields.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (!f.check()) {
+      el.classList.add('invalid');
+      valid = false;
+    } else {
+      el.classList.remove('invalid');
+    }
+  });
+
+  umSubmitBtn.disabled = !valid;
+  return valid;
+}
+
+async function submitUploadItem() {
+  if (!validateUploadForm()) return;
+
+  const file = uploadQueue[uploadQueueIndex];
+  const sectionId = umSection.value;
+  const description = umName.value.trim();
+  const price = Number(umPrice.value) || 0;
+  const quantity = Number(umQty.value) || 0;
+
+  const sizes = [];
+  umSizesWrap.querySelectorAll('.edit-chip.active').forEach(c => sizes.push(c.dataset.value));
+
+  const colors = [];
+  umColorsWrap.querySelectorAll('.edit-chip.active').forEach(c => colors.push(c.dataset.value));
+  umCustomColors.querySelectorAll('.edit-chip').forEach(c => colors.push(c.dataset.value));
+
+  umSubmitBtn.disabled = true;
+  umSubmitBtn.textContent = 'جارٍ الرفع...';
+
+  try {
+    // Get max order
+    let orderCounter = 0;
+    for (const sec of sectionsCache['ready-made']) {
+      const snap = await getDocs(query(collection(db, 'images'), where('sectionId', '==', sec.id)));
+      snap.docs.forEach(d => { const o = d.data().order || 0; if (o > orderCounter) orderCounter = o; });
+    }
+
+    const ext = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const storagePath = `images/ready-made/${fileName}`;
+    const storageRef = ref(storage, storagePath);
+
+    await new Promise((resolve, reject) => {
+      const task = uploadBytesResumable(storageRef, file);
+      task.on('state_changed', null, reject, async () => {
+        const url = await getDownloadURL(task.snapshot.ref);
+        await addDoc(collection(db, 'images'), {
+          sectionId, storageUrl: url, storagePath,
+          fileName: file.name, description, order: orderCounter + 1,
+          price, quantity, sizes, colors,
+          createdAt: serverTimestamp()
+        });
+        resolve();
+      });
+    });
+
+    showToast('تم إضافة المنتج', 'success');
+    umSubmitBtn.textContent = 'تم ✓';
+    umSubmitBtn.classList.add('success');
+
+    // Next file or close
+    uploadQueueIndex++;
+    if (uploadQueueIndex < uploadQueue.length) {
+      setTimeout(() => showUploadModal(), 400);
+    } else {
+      setTimeout(async () => {
+        closeUploadModal();
+        await loadPhotos('ready-made');
+      }, 400);
+    }
+
+  } catch (err) {
+    console.error(err);
+    showToast('فشل رفع المنتج', 'error');
+    umSubmitBtn.disabled = false;
+    umSubmitBtn.textContent = 'إضافة المنتج';
+  }
+}
+
+// Upload modal chip toggles
+umSizesWrap.addEventListener('click', e => {
+  const chip = e.target.closest('.edit-chip');
+  if (chip) { chip.classList.toggle('active'); validateUploadForm(); }
+});
+
+umColorsWrap.addEventListener('click', e => {
+  const chip = e.target.closest('.edit-chip');
+  if (chip) { chip.classList.toggle('active'); validateUploadForm(); }
+});
+
+// Upload modal custom color
+function umAddCustomColor() {
+  const val = umCustomInput.value.trim();
+  if (!val) return;
+  // Check predefined
+  const predefined = umColorsWrap.querySelector(`.edit-chip[data-value="${val}"]`);
+  if (predefined) { predefined.classList.add('active'); umCustomInput.value = ''; validateUploadForm(); return; }
+  // Check duplicate
+  if (umCustomColors.querySelector(`.edit-chip[data-value="${val}"]`)) { umCustomInput.value = ''; return; }
+  // Create chip
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'edit-chip active';
+  chip.dataset.value = val;
+  chip.innerHTML = `${escapeHtml(val)} <span class="chip-remove">✕</span>`;
+  chip.querySelector('.chip-remove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    chip.remove();
+    validateUploadForm();
+  });
+  umCustomColors.appendChild(chip);
+  umCustomInput.value = '';
+  validateUploadForm();
+}
+
+umBtnAddColor.addEventListener('click', umAddCustomColor);
+umCustomInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); umAddCustomColor(); }
+});
+
+// Live validation on input
+umName.addEventListener('input', validateUploadForm);
+umPrice.addEventListener('input', validateUploadForm);
+umQty.addEventListener('input', validateUploadForm);
+
+// Upload modal buttons
+umSubmitBtn.addEventListener('click', submitUploadItem);
+umSkipBtn.addEventListener('click', () => {
+  uploadQueueIndex++;
+  if (uploadQueueIndex < uploadQueue.length) {
+    showUploadModal();
+  } else {
+    closeUploadModal();
+    loadPhotos('ready-made');
+  }
+});
+umCloseBtn.addEventListener('click', () => {
+  if (uploadQueue.length > 1 && uploadQueueIndex < uploadQueue.length - 1) {
+    if (!confirm('هل تريد إلغاء إضافة بقية المنتجات؟')) return;
+  }
+  closeUploadModal();
+  loadPhotos('ready-made');
+});
+
+
+// =====================
 // Edit Drawer (Ready-Made)
 // =====================
 let editDrawerImageData = null;
@@ -850,22 +1235,16 @@ async function saveEditDrawer() {
     img.sizes = sizes;
     img.colors = colors;
 
-    // Update summary badge on card
-    const summary = editDrawerImageData.element.querySelector('.admin-readymade-summary');
-    if (summary) {
-      const priceDisplay = price ? `${Number(price).toLocaleString()} د.ع` : '';
-      summary.innerHTML = `
-        ${priceDisplay ? `<span class="rm-summary-price">${priceDisplay}</span>` : ''}
-        <span class="rm-summary-stock">${quantity} قطعة</span>
-      `;
-    }
-
     // Success feedback
     editSaveBtn.textContent = 'تم الحفظ ✓';
     editSaveBtn.classList.add('success');
     showToast('تم حفظ التعديلات', 'success');
 
-    setTimeout(() => closeEditDrawer(), 600);
+    setTimeout(async () => {
+      closeEditDrawer();
+      // Refresh the inventory table to reflect changes
+      await loadPhotos('ready-made');
+    }, 600);
   } catch (err) {
     console.error(err);
     showToast('تعذّر حفظ التعديلات', 'error');
