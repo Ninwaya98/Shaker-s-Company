@@ -163,28 +163,41 @@ function clearFabric() {
 
 document.getElementById('clear-fabric-btn').addEventListener('click', clearFabric);
 
-// ---- Collar & Pocket Selection ----
-let selectedCollar = null; // data-value string
+// ---- Dishdasha Type, Collar & Pocket Selection ----
+let selectedDishdashaType = null;
+let selectedCollar = null;
 let selectedPocket = null;
+let selectedSleeveType = null;
+
+const styleSelections = {
+  dishdashaType: () => selectedDishdashaType,
+  collar: () => selectedCollar,
+  pocket: () => selectedPocket,
+  sleeveType: () => selectedSleeveType
+};
 
 document.querySelectorAll('.style-option').forEach(btn => {
   btn.addEventListener('click', () => {
-    const type = btn.dataset.type; // 'collar' or 'pocket'
+    const type = btn.dataset.type;
     const value = btn.dataset.value;
 
     // Deselect siblings of the same type
     document.querySelectorAll(`.style-option[data-type="${type}"]`).forEach(b => b.classList.remove('selected'));
 
     // Toggle: if same button clicked again, deselect
-    if ((type === 'collar' && selectedCollar === value) || (type === 'pocket' && selectedPocket === value)) {
-      if (type === 'collar') selectedCollar = null;
-      else selectedPocket = null;
+    if (styleSelections[type]() === value) {
+      if (type === 'dishdashaType') selectedDishdashaType = null;
+      else if (type === 'collar') selectedCollar = null;
+      else if (type === 'pocket') selectedPocket = null;
+      else if (type === 'sleeveType') selectedSleeveType = null;
       return;
     }
 
     btn.classList.add('selected');
-    if (type === 'collar') selectedCollar = value;
-    else selectedPocket = value;
+    if (type === 'dishdashaType') selectedDishdashaType = value;
+    else if (type === 'collar') selectedCollar = value;
+    else if (type === 'pocket') selectedPocket = value;
+    else if (type === 'sleeveType') selectedSleeveType = value;
   });
 });
 
@@ -226,8 +239,10 @@ async function saveOrderToFirestore(measurements, fabricUrl, notes, customerName
           sleeveWidth:  { stringValue: measurements[5].value },
         }}},
         fabricUrl:   { stringValue: fabricUrl || '' },
+        dishdashaType: { stringValue: selectedDishdashaType || '' },
         collarType:  { stringValue: selectedCollar || '' },
         pocketType:  { stringValue: selectedPocket || '' },
+        sleeveType:  { stringValue: selectedSleeveType || '' },
         notes:       { stringValue: notes || '' },
         status:      { stringValue: 'new' },
         createdAt:  { timestampValue: new Date().toISOString() },
@@ -266,7 +281,15 @@ async function submitOrder() {
     return { label: f.label, value: v };
   });
 
-  // 2. Validate collar
+  // 2. Validate dishdasha type
+  const typeSelector = document.getElementById('type-selector');
+  typeSelector.classList.remove('input-error');
+  if (!selectedDishdashaType) {
+    typeSelector.classList.add('input-error');
+    missing.push('نوع الدشداشة');
+  }
+
+  // 3. Validate collar
   const collarSelector = document.getElementById('collar-selector');
   collarSelector.classList.remove('input-error');
   if (!selectedCollar) {
@@ -282,7 +305,15 @@ async function submitOrder() {
     missing.push('نوع الجيب');
   }
 
-  // 4. Validate fabric selection
+  // 4. Validate sleeve type
+  const sleeveSelector = document.getElementById('sleeve-selector');
+  sleeveSelector.classList.remove('input-error');
+  if (!selectedSleeveType) {
+    sleeveSelector.classList.add('input-error');
+    missing.push('نوع الردن');
+  }
+
+  // 5. Validate fabric selection
   if (!selectedFabric) {
     missing.push('اختيار القماش');
   }
@@ -328,8 +359,10 @@ async function submitOrder() {
     customerName, customerPhone,
     measurements: values,
     fabricUrl, notes,
+    dishdashaType: selectedDishdashaType || '',
     collarType: selectedCollar || '',
     pocketType: selectedPocket || '',
+    sleeveType: selectedSleeveType || '',
     fabricLabel: selectedFabric.label || '',
     fabricPrice: selectedFabric.price || 0,
     siteUrl: window.location.origin
@@ -348,8 +381,10 @@ async function submitOrder() {
     customerName, customerPhone,
     fabricUrl, fabricLabel: orderPayload.fabricLabel,
     fabricPrice: orderPayload.fabricPrice,
+    dishdashaType: orderPayload.dishdashaType,
     collarType: orderPayload.collarType,
     pocketType: orderPayload.pocketType,
+    sleeveType: orderPayload.sleeveType,
     notes: notes || ''
   });
   // Add each measurement as its own param
@@ -384,12 +419,16 @@ document.getElementById('new-order-btn').addEventListener('click', () => {
   document.getElementById('c-phone').classList.remove('input-error');
   // Clear fabric selection
   clearFabric();
-  // Clear collar & pocket selections
+  // Clear dishdasha type, collar & pocket selections
+  selectedDishdashaType = null;
   selectedCollar = null;
   selectedPocket = null;
+  selectedSleeveType = null;
   document.querySelectorAll('.style-option').forEach(b => b.classList.remove('selected'));
+  document.getElementById('type-selector').classList.remove('input-error');
   document.getElementById('collar-selector').classList.remove('input-error');
   document.getElementById('pocket-selector').classList.remove('input-error');
+  document.getElementById('sleeve-selector').classList.remove('input-error');
   // Hide error & confirmation, show submit button
   document.getElementById('order-error').style.display = 'none';
   document.getElementById('place-order-btn').style.display = 'flex';

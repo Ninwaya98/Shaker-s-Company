@@ -27,8 +27,10 @@ exports.handler = async (event) => {
     measurements = [],
     fabricUrl = '',
     notes = '',
+    dishdashaType = '',
     collarType = '',
     pocketType = '',
+    sleeveType = '',
     siteUrl = ''
   } = data;
 
@@ -65,6 +67,23 @@ exports.handler = async (event) => {
     '━━━━━━━━━━━━━━━━'
   );
 
+  // Dishdasha type labels
+  const dishdashaLabels = {
+    'iraqi1': 'عراقي ١', 'iraqi2': 'عراقي ٢', 'iraqi3': 'عراقي ٣',
+    'kuwaiti1': 'كويتي ١', 'kuwaiti2': 'كويتي ٢', 'kuwaiti3': 'كويتي ٣'
+  };
+  const dishdashaFiles = {
+    'iraqi1': 'Iraqi1.svg', 'iraqi2': 'Iraqi2.svg', 'iraqi3': 'Iraqi3.svg',
+    'kuwaiti1': 'Kuaiti1.svg', 'kuwaiti2': 'kuaiti2.svg', 'kuwaiti3': 'kuaiti3.svg'
+  };
+
+  if (dishdashaType) {
+    const label = dishdashaLabels[dishdashaType] || dishdashaType;
+    const file = dishdashaFiles[dishdashaType];
+    const imgUrl = siteUrl && file ? `${siteUrl}/assets/dishdasha%20type/${encodeURIComponent(file)}` : '';
+    lines.push(`🪡 نوع الدشداشة: ${label}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+  }
+
   // Collar & Pocket SVG filenames (some have spaces in them)
   const collarFiles = { '1': 'neck1.svg', '2': 'neck 2.svg', '3': 'neck 3.svg', '4': 'neck4.svg', '5': 'neck5.svg' };
   const pocketFiles = { '1': 'pocket1.svg', '2': 'pocket2.svg', '3': 'pocket 3.svg', '4': 'pocket 4.svg' };
@@ -78,6 +97,12 @@ exports.handler = async (event) => {
     const file = pocketFiles[pocketType];
     const imgUrl = siteUrl && file ? `${siteUrl}/assets/${encodeURIComponent(file)}` : '';
     lines.push(`🧥 نوع الجيب: جيب ${pocketType}${imgUrl ? '\n🔗 ' + imgUrl : ''}`);
+  }
+
+  // Sleeve type
+  const sleeveLabels = { 'flat': 'فلات', 'bazma': 'بزمة' };
+  if (sleeveType) {
+    lines.push(`🫲 نوع الردن: ${sleeveLabels[sleeveType] || sleeveType}`);
   }
 
   if (fabricUrl) lines.push(`🧵 القماش: ${fabricUrl}`);
