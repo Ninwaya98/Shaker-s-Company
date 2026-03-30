@@ -82,6 +82,29 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// ---- Measurement Video ----
+const videoOverlay = document.getElementById('video-overlay');
+const videoEl      = document.getElementById('measure-video');
+const videoClose   = document.getElementById('video-close');
+
+document.getElementById('watch-video-btn').addEventListener('click', () => {
+  videoOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  videoEl.play().catch(() => {});
+});
+
+function closeVideo() {
+  videoEl.pause();
+  videoOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+videoClose.addEventListener('click', closeVideo);
+videoOverlay.addEventListener('click', e => { if (e.target === videoOverlay) closeVideo(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && videoOverlay.classList.contains('open')) closeVideo();
+});
+
 // ---- Fabric Selection ----
 let selectedFabric = null; // { url, label, cardEl }
 

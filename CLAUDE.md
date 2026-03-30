@@ -99,7 +99,14 @@ service firebase.storage {
 }
 ```
 
-### 5. WhatsApp Number
+### 5. Measurement Video
+Add the measurement tutorial video file to `assets/` and set its path in `index.html`:
+```html
+<source src="assets/measurement-guide.mp4" type="video/mp4" />
+```
+The video plays in an overlay when the user clicks "كيف تأخذ قياساتك؟" below the dishdasha diagram.
+
+### 6. WhatsApp Number
 Set to `9647730666777` in:
 - `index.html` (contact button)
 - `js/main.js` (`WA_NUMBER` constant)
