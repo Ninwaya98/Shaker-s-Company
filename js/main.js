@@ -181,6 +181,11 @@ document.querySelectorAll('.style-option').forEach(btn => {
   });
 });
 
+// ---- Arabic/English Numeral Support ----
+function normalizeArabicNums(str) {
+  return str.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+}
+
 // ---- Order Form ----
 const measureFields = [
   { id: 'm-length',    label: 'الطول الكلي' },
@@ -231,11 +236,13 @@ async function submitOrder() {
   const errorBox = document.getElementById('order-error');
   const missing = [];
 
-  // 1. Validate measurements
+  // 1. Validate measurements (accept Arabic ٠-٩ and English 0-9)
   const values = measureFields.map(f => {
     const el = document.getElementById(f.id);
     el.classList.remove('input-error');
-    const v = el.value.trim();
+    const raw = el.value.trim();
+    const v = normalizeArabicNums(raw);
+    el.value = v; // normalize display to English digits
     if (!v || Number(v) <= 0) {
       el.classList.add('input-error');
       missing.push(f.label);
