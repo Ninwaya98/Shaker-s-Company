@@ -1623,44 +1623,79 @@ const POCKET_LABELS = { '1': 'جيب ١', '2': 'جيب ٢', '3': 'جيب ٣', '4
 const SLEEVE_LABELS = { 'flat': 'فلات', 'bazma': 'بزمة' };
 
 // Toggle between products and orders views
-ordersToggleBtn.addEventListener('click', () => {
-  const isOrders = ordersView.classList.contains('visible');
-  if (isOrders) {
-    ordersView.classList.remove('visible');
-    adminMain.style.display = '';
-    ordersToggleBtn.classList.remove('active');
-  } else {
-    ordersView.classList.add('visible');
-    adminMain.style.display = 'none';
-    ordersToggleBtn.classList.add('active');
-    loadOrders(); // Always refresh when switching to orders
-  }
-});
+if (ordersToggleBtn) {
+  ordersToggleBtn.addEventListener('click', () => {
+    const isOrders = ordersView.classList.contains('visible');
+    if (isOrders) {
+      ordersView.classList.remove('visible');
+      adminMain.style.display = '';
+      ordersToggleBtn.classList.remove('active');
+    } else {
+      ordersView.classList.add('visible');
+      adminMain.style.display = 'none';
+      ordersToggleBtn.classList.add('active');
+      loadOrders();
+    }
+  });
+} else {
+  console.error('Orders toggle button not found');
+}
 
 // Load all orders from Firestore
 async function loadOrders() {
+  if (!ordersList) { console.error('orders-list element not found'); return; }
   ordersList.innerHTML = '<div class="loading-text">جارٍ تحميل الطلبات...</div>';
   try {
+    console.log('Loading orders from Firestore...');
     const snap = await getDocs(collection(db, 'orders'));
-    console.log(`Loaded ${snap.docs.length} orders`);
+    console.log(`Loaded ${snap.docs.length} orders from Firestore`);
+
+    if (snap.docs.length > 0) {
+      console.log('First order raw data:', JSON.stringify(snap.docs[0].data()).slice(0, 300));
+    }
+
     allOrders = snap.docs.map(d => {
       const data = d.data();
+      // Handle measurements: SDK returns plain object, values are already unwrapped strings
+      const rawMeasurements = data.measurements || {};
+      const measurements = {};
+      for (const [k, v] of Object.entries(rawMeasurements)) {
+        measurements[k] = typeof v === 'object' && v !== null && v.stringValue ? v.stringValue : v;
+      }
+
       return {
         id: d.id,
-        ...data,
+        orderType: data.orderType || 'tailored',
+        customerName: data.customerName || '',
+        customerPhone: data.customerPhone || '',
+        status: data.status || 'new',
         createdAt: parseTimestamp(data.createdAt),
         updatedAt: parseTimestamp(data.updatedAt),
-        measurements: data.measurements || {},
+        measurements,
         price: Number(data.price) || 0,
-        status: data.status || 'new'
+        // Tailored fields
+        fabricUrl: data.fabricUrl || '',
+        dishdashaType: data.dishdashaType || '',
+        collarType: data.collarType || '',
+        pocketType: data.pocketType || '',
+        sleeveType: data.sleeveType || '',
+        notes: data.notes || '',
+        // Ready-made fields
+        imageId: data.imageId || '',
+        imageUrl: data.imageUrl || '',
+        itemName: data.itemName || '',
+        size: data.size || '',
+        color: data.color || ''
       };
     });
-    // Sort newest first (client-side — avoids index issues)
+
+    // Sort newest first
     allOrders.sort((a, b) => b.createdAt - a.createdAt);
+    console.log('Processed orders:', allOrders.length, allOrders.map(o => ({ id: o.id.slice(-6), type: o.orderType, status: o.status, name: o.customerName })));
     renderOrdersView();
   } catch (err) {
     console.error('Failed to load orders:', err);
-    ordersList.innerHTML = `<div class="loading-text">تعذّر تحميل الطلبات: ${err.message}</div>`;
+    ordersList.innerHTML = `<div class="loading-text">تعذّر تحميل الطلبات: ${escapeHtml(err.message)}</div>`;
   }
 }
 
