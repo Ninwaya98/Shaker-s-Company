@@ -1782,26 +1782,28 @@ function renderOrderCard(order) {
     `<option value="${key}" ${order.status === key ? 'selected' : ''}>${cfg.label}</option>`
   ).join('');
 
-  // Header
+  // Header — restructured for clarity
   const header = document.createElement('div');
   header.className = 'order-card-header';
   header.innerHTML = `
     ${thumbUrl ? `<img class="order-thumb" src="${thumbUrl}" alt="" loading="lazy" />` : ''}
     <div class="order-info">
-      <div class="order-info-top">
-        <span class="order-type-badge ${typeBadgeClass}">${typeBadgeText}</span>
+      <div class="order-row-main">
         <span class="order-customer-name">${escapeHtml(order.customerName || 'بدون اسم')}</span>
-        <span class="order-id">${shortId}</span>
+        <select class="order-status-select status-${order.status}" data-order-id="${order.id}">
+          ${statusOptions}
+        </select>
       </div>
-      <div class="order-info-sub">
+      <div class="order-row-contact">
         <a class="order-phone-link" href="${waLink}" target="_blank" rel="noopener">${escapeHtml(order.customerPhone || '')}</a>
+        <span class="order-type-badge ${typeBadgeClass}">${typeBadgeText}</span>
+      </div>
+      <div class="order-row-meta">
         <span class="order-date">${dateStr}</span>
+        <span class="order-id">${shortId}</span>
+        ${price > 0 ? `<span class="order-price-display">${price.toLocaleString()} د.ع</span>` : ''}
       </div>
     </div>
-    ${price > 0 ? `<span class="order-price-display">${price.toLocaleString()} د.ع</span>` : ''}
-    <select class="order-status-select status-${order.status}" data-order-id="${order.id}">
-      ${statusOptions}
-    </select>
     <span class="order-expand-icon">▼</span>
   `;
 
