@@ -1037,6 +1037,21 @@ nav a:hover {
   border-radius: 4px;
 }
 
+/* Stock count badge */
+.stock-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(46,125,50,0.88);
+  color: #fff;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  z-index: 3;
+}
+
 /* Ready-Made Modal Order Form */
 #modal-readymade-order {
   padding: 0 1.25rem 1rem;
@@ -1154,6 +1169,223 @@ nav a:hover {
   .measure-row label {
     width: 75px;
     font-size: 0.8rem;
+  }
+}
+
+/* =====================
+   Order Tracking
+   ===================== */
+#my-orders {
+  padding: 3rem 2rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+#my-orders h2 {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 1.5rem;
+}
+
+.track-hint {
+  text-align: center;
+  color: #888;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.track-input-row {
+  display: flex;
+  gap: 0.6rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.track-phone-input {
+  flex: 1;
+  padding: 0.7rem 1rem;
+  border: 2px solid var(--cream-dark);
+  border-radius: 10px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 1rem;
+  color: var(--navy);
+  background: #fff;
+  outline: none;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.track-phone-input:focus {
+  border-color: var(--gold);
+}
+
+.track-btn {
+  background: var(--gold);
+  color: var(--navy);
+  font-family: 'Cairo', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.track-btn:hover {
+  background: var(--gold-light);
+}
+
+/* Saved phone bar */
+.track-saved-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--navy);
+  border-radius: 10px;
+  padding: 0.6rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.track-saved-phone {
+  color: var(--gold);
+  font-size: 1rem;
+  font-weight: 700;
+  direction: ltr;
+}
+
+.track-change-btn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: rgba(255,255,255,0.7);
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.track-change-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Order cards */
+.track-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.track-empty {
+  text-align: center;
+  color: #999;
+  padding: 2rem;
+  font-size: 0.95rem;
+}
+
+.track-card {
+  display: flex;
+  gap: 0.85rem;
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1rem;
+  box-shadow: 0 2px 12px rgba(11,28,61,0.08);
+}
+
+.track-card-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--cream-dark);
+  flex-shrink: 0;
+}
+
+.track-card-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.track-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.track-card-id {
+  font-family: monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #999;
+  direction: ltr;
+}
+
+.track-card-date {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.track-card-details {
+  font-size: 0.85rem;
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.track-card-price {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.track-card-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.track-status-icon {
+  font-size: 0.75rem;
+}
+
+.track-status-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+@media (max-width: 600px) {
+  #my-orders {
+    padding: 2rem 1rem;
+  }
+
+  #my-orders h2 {
+    font-size: 1.3rem;
+  }
+
+  .track-input-row {
+    flex-direction: column;
+  }
+
+  .track-btn {
+    width: 100%;
+    min-height: 48px;
+  }
+
+  .track-card-thumb {
+    width: 50px;
+    height: 50px;
   }
 }
 

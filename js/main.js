@@ -767,6 +767,196 @@ function buildSectionEl(section, images, category) {
   return wrap;
 }
 
+// ---- Order Tracking ----
+const TRACK_STATUS = {
+  'new':       { label: 'قيد المراجعة', icon: '🔵' },
+  'ordered':   { label: 'تم الطلب',     icon: '🟡' },
+  'delivered': { label: 'تم التوصيل',   icon: '🟢' },
+  'returned':  { label: 'مرتجع',       icon: '🔴' }
+};
+
+function normalizePhone(phone) {
+  let digits = phone.replace(/[^0-9]/g, '');
+  if (digits.startsWith('00964')) digits = digits.slice(2);
+  else if (digits.startsWith('964')) { /* already international */ }
+  else if (digits.startsWith('0')) digits = '964' + digits.slice(1);
+  return digits;
+}
+
+function phoneVariants(phone) {
+  const norm = normalizePhone(phone);
+  if (!norm || norm.length < 7) return [];
+  const variants = [norm];
+  // With leading 0 (local format)
+  if (norm.startsWith('964')) {
+    variants.push('0' + norm.slice(3));
+  }
+  // Raw digits without country code
+  if (norm.startsWith('964')) {
+    variants.push(norm.slice(3));
+  }
+  // With +
+  variants.push('+' + norm);
+  return [...new Set(variants)];
+}
+
+async function fetchOrdersByPhone(phone) {
+  const variants = phoneVariants(phone);
+  if (variants.length === 0) return [];
+
+  // Query each variant (Firestore IN operator via REST is complex, simpler to do multiple queries)
+  const allResults = [];
+  const seenIds = new Set();
+
+  for (const variant of variants) {
+    try {
+      const rows = await fsQuery({
+        from: [{ collectionId: 'orders' }],
+        where: {
+          fieldFilter: {
+            field: { fieldPath: 'customerPhone' },
+            op: 'EQUAL',
+            value: { stringValue: variant }
+          }
+        }
+      });
+      rows.forEach(r => {
+        const id = r.document.name.split('/').pop();
+        if (!seenIds.has(id)) {
+          seenIds.add(id);
+          allResults.push(r);
+        }
+      });
+    } catch (e) {
+      console.error('Order query failed for variant:', variant, e);
+    }
+  }
+
+  return allResults.map(r => {
+    const d = r.document;
+    const id = d.name.split('/').pop();
+    return {
+      id,
+      orderType: field(d, 'orderType') || 'tailored',
+      status: field(d, 'status') || 'ordered',
+      customerName: field(d, 'customerName'),
+      customerPhone: field(d, 'customerPhone'),
+      itemName: field(d, 'itemName'),
+      imageUrl: field(d, 'imageUrl'),
+      fabricUrl: field(d, 'fabricUrl'),
+      price: Number(field(d, 'price')) || 0,
+      size: field(d, 'size'),
+      color: field(d, 'color'),
+      dishdashaType: field(d, 'dishdashaType'),
+      createdAt: field(d, 'createdAt')
+    };
+  }).sort((a, b) => {
+    // newest first
+    if (a.createdAt && b.createdAt) return b.createdAt.localeCompare(a.createdAt);
+    return 0;
+  });
+}
+
+function renderTrackOrders(orders) {
+  const container = document.getElementById('track-orders');
+  if (orders.length === 0) {
+    container.innerHTML = '<div class="track-empty">لا توجد طلبات مرتبطة بهذا الرقم</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  orders.forEach(order => {
+    const card = document.createElement('div');
+    card.className = 'track-card';
+
+    const statusInfo = TRACK_STATUS[order.status] || TRACK_STATUS['ordered'];
+    const isReadyMade = order.orderType === 'ready-made';
+    const thumbUrl = isReadyMade ? order.imageUrl : order.fabricUrl;
+    const shortId = `#${order.id.slice(-6).toUpperCase()}`;
+    const price = order.price > 0 ? `${order.price.toLocaleString()} د.ع` : '';
+
+    let dateStr = '';
+    if (order.createdAt) {
+      try { dateStr = new Date(order.createdAt).toLocaleDateString('ar-IQ', { day: 'numeric', month: 'short' }); } catch {}
+    }
+
+    let details = '';
+    if (isReadyMade) {
+      const parts = [order.itemName, order.size, order.color].filter(Boolean);
+      details = parts.join(' · ');
+    } else {
+      details = 'فصال';
+      if (order.dishdashaType) {
+        const labels = { 'iraqi1': 'عراقي سحاب', 'iraqi2': 'عراقي ظاهري', 'iraqi3': 'عراقي مخفي', 'kuwaiti1': 'كويتي مخفي', 'kuwaiti2': 'كويتي ظاهري', 'kuwaiti3': 'كويتي مخفي (حشوه)' };
+        details += ' · ' + (labels[order.dishdashaType] || order.dishdashaType);
+      }
+    }
+
+    card.innerHTML = `
+      ${thumbUrl ? `<img class="track-card-thumb" src="${thumbUrl}" alt="" loading="lazy" />` : ''}
+      <div class="track-card-info">
+        <div class="track-card-top">
+          <span class="track-card-id">${shortId}</span>
+          <span class="track-card-date">${dateStr}</span>
+        </div>
+        <div class="track-card-details">${details}</div>
+        ${price ? `<div class="track-card-price">${price}</div>` : ''}
+        <div class="track-card-status">
+          <span class="track-status-icon">${statusInfo.icon}</span>
+          <span class="track-status-label">${statusInfo.label}</span>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+// Track form handlers
+const trackPhoneInput = document.getElementById('track-phone');
+const trackBtn = document.getElementById('track-btn');
+const trackPhoneForm = document.getElementById('track-phone-form');
+const trackSavedBar = document.getElementById('track-saved-bar');
+const trackSavedPhone = document.getElementById('track-saved-phone');
+const trackChangeBtn = document.getElementById('track-change-btn');
+const trackOrders = document.getElementById('track-orders');
+
+async function doTrack(phone) {
+  if (!phone || phone.replace(/[^0-9]/g, '').length < 7) return;
+  trackOrders.innerHTML = '<div class="spinner"></div>';
+  localStorage.setItem('shaker_phone', phone);
+  showSavedBar(phone);
+
+  const orders = await fetchOrdersByPhone(phone);
+  renderTrackOrders(orders);
+}
+
+function showSavedBar(phone) {
+  trackPhoneForm.style.display = 'none';
+  trackSavedBar.style.display = 'flex';
+  trackSavedPhone.textContent = phone;
+}
+
+trackBtn.addEventListener('click', () => doTrack(trackPhoneInput.value.trim()));
+trackPhoneInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); doTrack(trackPhoneInput.value.trim()); }
+});
+
+trackChangeBtn.addEventListener('click', () => {
+  localStorage.removeItem('shaker_phone');
+  trackPhoneForm.style.display = '';
+  trackSavedBar.style.display = 'none';
+  trackOrders.innerHTML = '';
+  trackPhoneInput.value = '';
+  trackPhoneInput.focus();
+});
+
+// Auto-load saved phone on page load
+const savedPhone = localStorage.getItem('shaker_phone');
+if (savedPhone) {
+  doTrack(savedPhone);
+}
+
 // ---- Init ---- (only load default active tab; others load on first click)
 loadedCategories.add('tailored');
 loadCategory('tailored');

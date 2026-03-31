@@ -25,6 +25,7 @@
     </div>
     <nav>
       <a href="#gallery">معرض</a>
+      <a href="#my-orders" id="nav-orders">طلباتي</a>
       <a href="#contact">تواصل معنا</a>
     </nav>
   </header>
@@ -344,6 +345,29 @@
         <div class="spinner"></div>
       </div>
     </div>
+  </section>
+
+  <!-- ===== My Orders ===== -->
+  <section id="my-orders">
+    <h2>طلباتي</h2>
+
+    <!-- Phone Input -->
+    <div id="track-phone-form" class="track-phone-form">
+      <p class="track-hint">أدخل رقم هاتفك لمتابعة طلباتك</p>
+      <div class="track-input-row">
+        <input type="tel" id="track-phone" class="track-phone-input" placeholder="07XXXXXXXXX" dir="ltr" inputmode="numeric" />
+        <button id="track-btn" class="track-btn" type="button">متابعة</button>
+      </div>
+    </div>
+
+    <!-- Saved user bar (shown when phone is saved) -->
+    <div id="track-saved-bar" class="track-saved-bar" style="display:none">
+      <span id="track-saved-phone" class="track-saved-phone"></span>
+      <button id="track-change-btn" class="track-change-btn">تغيير الرقم</button>
+    </div>
+
+    <!-- Orders list -->
+    <div id="track-orders" class="track-orders"></div>
   </section>
 
   <!-- ===== Contact ===== -->
