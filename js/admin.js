@@ -1606,7 +1606,6 @@ const ordersSearch    = document.getElementById('orders-search');
 let allOrders = [];
 let ordersFilterStatus = null;
 let ordersFilterType = 'all';
-let ordersLoaded = false;
 
 const STATUS_CONFIG = {
   'new':       { label: 'جديد',       color: '#1976d2' },
@@ -1635,10 +1634,7 @@ ordersToggleBtn.addEventListener('click', () => {
     ordersView.classList.add('visible');
     adminMain.style.display = 'none';
     ordersToggleBtn.classList.add('active');
-    if (!ordersLoaded) {
-      ordersLoaded = true;
-      loadOrders();
-    }
+    loadOrders(); // Always refresh when switching to orders
   }
 });
 
@@ -1655,10 +1651,8 @@ async function loadOrders() {
       return {
         id: d.id,
         ...data,
-        // Normalize timestamps
-        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000) : new Date()),
-        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
-        // Normalize nested map
+        createdAt: parseTimestamp(data.createdAt),
+        updatedAt: parseTimestamp(data.updatedAt),
         measurements: data.measurements || {},
         price: Number(data.price) || 0,
         status: data.status || 'new'
@@ -1956,6 +1950,15 @@ ordersSearch.addEventListener('input', () => {
 // =====================
 // Utility
 // =====================
+function parseTimestamp(ts) {
+  if (!ts) return new Date();
+  if (ts.toDate) return ts.toDate(); // Firestore Timestamp object
+  if (ts.seconds) return new Date(ts.seconds * 1000); // Firestore seconds
+  if (typeof ts === 'string') return new Date(ts); // ISO string from REST API
+  if (ts instanceof Date) return ts;
+  return new Date();
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return str
