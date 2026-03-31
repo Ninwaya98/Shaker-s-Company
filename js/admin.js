@@ -15,7 +15,8 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 import {
   ref,
@@ -1590,6 +1591,365 @@ tabBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     if (editDrawerImageData) closeEditDrawer();
   });
+});
+
+
+// =====================
+// Orders Dashboard
+// =====================
+const ordersToggleBtn = document.getElementById('orders-toggle-btn');
+const ordersView      = document.getElementById('orders-view');
+const adminMain       = document.querySelector('.admin-main');
+const ordersList      = document.getElementById('orders-list');
+const ordersSearch    = document.getElementById('orders-search');
+
+let allOrders = [];
+let ordersFilterStatus = null;
+let ordersFilterType = 'all';
+let ordersLoaded = false;
+
+const STATUS_CONFIG = {
+  'new':       { label: 'جديد',       color: '#1976d2' },
+  'ordered':   { label: 'تم الطلب',    color: '#C9A84C' },
+  'delivered': { label: 'تم التوصيل',  color: '#2e7d32' },
+  'sold':      { label: 'مباع',       color: '#0B1C3D' },
+  'returned':  { label: 'مرتجع',      color: '#e53935' }
+};
+
+const DISHDASHA_LABELS = {
+  'iraqi1': 'عراقي سحاب', 'iraqi2': 'عراقي ظاهري', 'iraqi3': 'عراقي مخفي',
+  'kuwaiti1': 'كويتي مخفي', 'kuwaiti2': 'كويتي ظاهري', 'kuwaiti3': 'كويتي مخفي (حشوه)'
+};
+const COLLAR_LABELS = { '1': 'ياخة قميص كبيرة', '2': 'ياخة قميص وسط', '3': 'ياخة دگمة وحدة', '4': 'ياخة دگمتين', '5': 'ياخة فراشة' };
+const POCKET_LABELS = { '1': 'جيب ١', '2': 'جيب ٢', '3': 'جيب ٣', '4': 'جيب ٤' };
+const SLEEVE_LABELS = { 'flat': 'فلات', 'bazma': 'بزمة' };
+
+// Toggle between products and orders views
+ordersToggleBtn.addEventListener('click', () => {
+  const isOrders = ordersView.classList.contains('visible');
+  if (isOrders) {
+    ordersView.classList.remove('visible');
+    adminMain.style.display = '';
+    ordersToggleBtn.classList.remove('active');
+  } else {
+    ordersView.classList.add('visible');
+    adminMain.style.display = 'none';
+    ordersToggleBtn.classList.add('active');
+    if (!ordersLoaded) {
+      ordersLoaded = true;
+      loadOrders();
+    }
+  }
+});
+
+// Load all orders from Firestore
+async function loadOrders() {
+  ordersList.innerHTML = '<div class="loading-text">جارٍ تحميل الطلبات...</div>';
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'orders'),
+      orderBy('createdAt', 'desc')
+    ));
+    allOrders = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        // Normalize timestamps
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : (data.createdAt?.seconds ? new Date(data.createdAt.seconds * 1000) : new Date()),
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : null,
+        // Normalize nested map
+        measurements: data.measurements || {},
+        price: Number(data.price) || 0,
+        status: data.status || 'new'
+      };
+    });
+    renderOrdersView();
+  } catch (err) {
+    console.error('Failed to load orders:', err);
+    ordersList.innerHTML = '<div class="loading-text">تعذّر تحميل الطلبات.</div>';
+  }
+}
+
+// Render everything
+function renderOrdersView() {
+  renderStats();
+  renderOrdersList();
+}
+
+// Stats cards
+function renderStats() {
+  const counts = { new: 0, ordered: 0, delivered: 0, sold: 0, returned: 0 };
+  let totalSales = 0;
+  let monthlySales = 0;
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+
+  allOrders.forEach(order => {
+    const status = order.status || 'new';
+    if (counts[status] !== undefined) counts[status]++;
+
+    if (status === 'sold' && order.price > 0) {
+      totalSales += order.price;
+      if (order.createdAt.getMonth() === thisMonth && order.createdAt.getFullYear() === thisYear) {
+        monthlySales += order.price;
+      }
+    }
+  });
+
+  document.getElementById('stat-new-count').textContent = counts.new;
+  document.getElementById('stat-ordered-count').textContent = counts.ordered;
+  document.getElementById('stat-delivered-count').textContent = counts.delivered;
+  document.getElementById('stat-sold-count').textContent = counts.sold;
+  document.getElementById('stat-returned-count').textContent = counts.returned;
+
+  document.getElementById('total-sales').textContent = totalSales > 0 ? `${totalSales.toLocaleString()} د.ع` : '0 د.ع';
+  document.getElementById('monthly-sales').textContent = monthlySales > 0 ? `${monthlySales.toLocaleString()} د.ع` : '0 د.ع';
+}
+
+// Filter + render orders list
+function renderOrdersList() {
+  const searchVal = ordersSearch.value.trim().toLowerCase();
+
+  const filtered = allOrders.filter(order => {
+    if (ordersFilterStatus && order.status !== ordersFilterStatus) return false;
+    if (ordersFilterType !== 'all' && order.orderType !== ordersFilterType) return false;
+    if (searchVal) {
+      const name = (order.customerName || '').toLowerCase();
+      const phone = (order.customerPhone || '').toLowerCase();
+      if (!name.includes(searchVal) && !phone.includes(searchVal)) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    ordersList.innerHTML = '<div class="orders-empty">لا توجد طلبات</div>';
+    return;
+  }
+
+  ordersList.innerHTML = '';
+  filtered.forEach(order => {
+    ordersList.appendChild(renderOrderCard(order));
+  });
+}
+
+// Render a single order card
+function renderOrderCard(order) {
+  const card = document.createElement('div');
+  card.className = 'order-card';
+  card.dataset.id = order.id;
+
+  const isReadyMade = order.orderType === 'ready-made';
+  const typeBadgeClass = isReadyMade ? 'ready-made' : 'tailored';
+  const typeBadgeText = isReadyMade ? 'جاهز' : 'فصال';
+
+  const thumbUrl = isReadyMade ? (order.imageUrl || '') : (order.fabricUrl || '');
+  const price = order.price || 0;
+  const shortId = order.id ? `#${order.id.slice(-6).toUpperCase()}` : '';
+
+  const dateStr = order.createdAt ? order.createdAt.toLocaleDateString('ar-IQ', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+
+  const cleanPhone = (order.customerPhone || '').replace(/[^0-9]/g, '');
+  const waLink = cleanPhone ? `https://wa.me/${cleanPhone}` : '#';
+
+  // Status select options
+  const statusOptions = Object.entries(STATUS_CONFIG).map(([key, cfg]) =>
+    `<option value="${key}" ${order.status === key ? 'selected' : ''}>${cfg.label}</option>`
+  ).join('');
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'order-card-header';
+  header.innerHTML = `
+    ${thumbUrl ? `<img class="order-thumb" src="${thumbUrl}" alt="" loading="lazy" />` : ''}
+    <div class="order-info">
+      <div class="order-info-top">
+        <span class="order-type-badge ${typeBadgeClass}">${typeBadgeText}</span>
+        <span class="order-customer-name">${escapeHtml(order.customerName || 'بدون اسم')}</span>
+        <span class="order-id">${shortId}</span>
+      </div>
+      <div class="order-info-sub">
+        <a class="order-phone-link" href="${waLink}" target="_blank" rel="noopener">${escapeHtml(order.customerPhone || '')}</a>
+        <span class="order-date">${dateStr}</span>
+      </div>
+    </div>
+    ${price > 0 ? `<span class="order-price-display">${price.toLocaleString()} د.ع</span>` : ''}
+    <select class="order-status-select status-${order.status}" data-order-id="${order.id}">
+      ${statusOptions}
+    </select>
+    <span class="order-expand-icon">▼</span>
+  `;
+
+  // Status change handler
+  const statusSelect = header.querySelector('.order-status-select');
+  statusSelect.addEventListener('click', e => e.stopPropagation());
+  statusSelect.addEventListener('change', async () => {
+    const newStatus = statusSelect.value;
+    await updateOrderStatus(order.id, newStatus, statusSelect);
+    order.status = newStatus;
+    renderStats();
+  });
+
+  // Toggle expand
+  header.addEventListener('click', () => {
+    card.classList.toggle('expanded');
+  });
+
+  card.appendChild(header);
+
+  // Body (details)
+  const body = document.createElement('div');
+  body.className = 'order-card-body';
+
+  if (isReadyMade) {
+    body.innerHTML = buildReadyMadeDetails(order);
+  } else {
+    body.innerHTML = buildTailoredDetails(order);
+  }
+
+  // Tailored price input handler
+  if (!isReadyMade) {
+    const priceInput = body.querySelector('.order-price-input');
+    if (priceInput) {
+      priceInput.addEventListener('change', async () => {
+        const newPrice = Number(priceInput.value) || 0;
+        await updateOrderPrice(order.id, newPrice);
+        order.price = newPrice;
+        // Update price display in header
+        const priceDisplay = header.querySelector('.order-price-display');
+        if (priceDisplay) {
+          priceDisplay.textContent = newPrice > 0 ? `${newPrice.toLocaleString()} د.ع` : '';
+        } else if (newPrice > 0) {
+          const span = document.createElement('span');
+          span.className = 'order-price-display';
+          span.textContent = `${newPrice.toLocaleString()} د.ع`;
+          statusSelect.before(span);
+        }
+        renderStats();
+      });
+    }
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+function buildReadyMadeDetails(order) {
+  const details = [];
+  if (order.itemName) details.push({ label: 'المنتج', value: order.itemName });
+  if (order.size) details.push({ label: 'المقاس', value: order.size });
+  if (order.color) details.push({ label: 'اللون', value: order.color });
+  if (order.price) details.push({ label: 'السعر', value: `${Number(order.price).toLocaleString()} د.ع` });
+
+  let html = '<div class="order-detail-grid">';
+  details.forEach(d => {
+    html += `<div class="order-detail-item"><span class="order-detail-label">${d.label}</span><span class="order-detail-value">${escapeHtml(String(d.value))}</span></div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function buildTailoredDetails(order) {
+  const m = order.measurements || {};
+  const details = [];
+
+  if (order.dishdashaType) details.push({ label: 'نوع الدشداشة', value: DISHDASHA_LABELS[order.dishdashaType] || order.dishdashaType });
+  if (order.collarType) details.push({ label: 'الياخة', value: COLLAR_LABELS[order.collarType] || order.collarType });
+  if (order.pocketType) details.push({ label: 'الجيب', value: POCKET_LABELS[order.pocketType] || order.pocketType });
+  if (order.sleeveType) details.push({ label: 'الردن', value: SLEEVE_LABELS[order.sleeveType] || order.sleeveType });
+
+  // Measurements
+  const measureKeys = [
+    ['totalLength', 'الطول الكلي'], ['chest', 'الصدر'], ['shoulder', 'الكتف'],
+    ['neck', 'الياخة'], ['sleeveLength', 'طول الردن'], ['sleeveWidth', 'عرض الردن']
+  ];
+  measureKeys.forEach(([key, label]) => {
+    if (m[key]) details.push({ label, value: `${m[key]} سم` });
+  });
+
+  let html = '<div class="order-detail-grid">';
+  details.forEach(d => {
+    html += `<div class="order-detail-item"><span class="order-detail-label">${d.label}</span><span class="order-detail-value">${escapeHtml(String(d.value))}</span></div>`;
+  });
+  html += '</div>';
+
+  // Price input for tailored
+  html += `
+    <div class="order-price-edit">
+      <label>السعر:</label>
+      <input type="number" class="order-price-input" value="${order.price || ''}" placeholder="0" min="0" step="500" inputmode="numeric" />
+      <span class="order-price-unit">د.ع</span>
+    </div>
+  `;
+
+  // Notes
+  if (order.notes) {
+    html += `<div class="order-notes"><strong>ملاحظات:</strong> ${escapeHtml(order.notes)}</div>`;
+  }
+
+  return html;
+}
+
+// Update order status in Firestore
+async function updateOrderStatus(orderId, newStatus, selectEl) {
+  try {
+    await updateDoc(doc(db, 'orders', orderId), {
+      status: newStatus,
+      updatedAt: serverTimestamp()
+    });
+    // Update select class
+    selectEl.className = `order-status-select status-${newStatus}`;
+    showToast(`تم تحديث الحالة: ${STATUS_CONFIG[newStatus]?.label || newStatus}`, 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر تحديث الحالة', 'error');
+  }
+}
+
+// Update tailored order price
+async function updateOrderPrice(orderId, price) {
+  try {
+    await updateDoc(doc(db, 'orders', orderId), {
+      price,
+      updatedAt: serverTimestamp()
+    });
+    showToast('تم حفظ السعر', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر حفظ السعر', 'error');
+  }
+}
+
+// Stats card click → filter by status
+document.querySelectorAll('.stat-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const status = card.dataset.status;
+    if (ordersFilterStatus === status) {
+      ordersFilterStatus = null;
+      card.classList.remove('active');
+    } else {
+      document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+      ordersFilterStatus = status;
+      card.classList.add('active');
+    }
+    renderOrdersList();
+  });
+});
+
+// Type filter buttons
+document.querySelectorAll('.type-filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.type-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ordersFilterType = btn.dataset.type;
+    renderOrdersList();
+  });
+});
+
+// Search input
+ordersSearch.addEventListener('input', () => {
+  renderOrdersList();
 });
 
 
