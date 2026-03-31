@@ -11,6 +11,9 @@
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="ar_IQ" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0B1C3D" />
+  <link rel="apple-touch-icon" href="assets/logo/logo-gold.png" />
 </head>
 <body>
 
@@ -471,6 +474,9 @@
   <script src="js/main.js"></script>
   <script>
     document.getElementById('footer-year').textContent = new Date().getFullYear();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
   </script>
 
 </body>

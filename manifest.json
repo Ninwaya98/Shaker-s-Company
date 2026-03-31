@@ -1,0 +1,25 @@
+{
+  "name": "شاكر للدشاديش الرجالية",
+  "short_name": "شاكر",
+  "description": "دشاديش رجالية جاهزة وفصال بأعلى جودة",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B1C3D",
+  "theme_color": "#0B1C3D",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "assets/logo/logo-gold.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/logo/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
