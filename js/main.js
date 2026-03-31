@@ -771,6 +771,7 @@ function buildSectionEl(section, images, category) {
 const TRACK_STATUS = {
   'new':        { label: 'قيد المراجعة',  icon: '🔵' },
   'ordered':    { label: 'تم الطلب',      icon: '🟡' },
+  'sewing':     { label: 'قيد الخياطة',   icon: '🪡' },
   'delivering': { label: 'جاري التوصيل',  icon: '🚚' },
   'delivered':  { label: 'تم التوصيل',    icon: '🟢' },
   'returned':   { label: 'مرتجع',        icon: '🔴' }

@@ -1608,6 +1608,7 @@ let ordersFilterType = 'all';
 
 const STATUS_CONFIG = {
   'ordered':    { label: 'تم الطلب',    color: '#C9A84C' },
+  'sewing':     { label: 'قيد الخياطة',  color: '#7b1fa2' },
   'delivering': { label: 'جاري التوصيل', color: '#1976d2' },
   'delivered':  { label: 'تم التوصيل',  color: '#2e7d32' },
   'returned':   { label: 'مرتجع',      color: '#e53935' }
@@ -1706,7 +1707,7 @@ function renderOrdersView() {
 
 // Stats cards
 function renderStats() {
-  const counts = { ordered: 0, delivering: 0, delivered: 0, returned: 0 };
+  const counts = { ordered: 0, sewing: 0, delivering: 0, delivered: 0, returned: 0 };
   let totalSales = 0;
   let monthlySales = 0;
   const now = new Date();
@@ -1726,6 +1727,7 @@ function renderStats() {
   });
 
   document.getElementById('stat-ordered-count').textContent = counts.ordered;
+  document.getElementById('stat-sewing-count').textContent = counts.sewing;
   document.getElementById('stat-delivering-count').textContent = counts.delivering;
   document.getElementById('stat-delivered-count').textContent = counts.delivered;
   document.getElementById('stat-returned-count').textContent = counts.returned;

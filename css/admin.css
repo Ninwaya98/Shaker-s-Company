@@ -2241,6 +2241,8 @@ body.edit-drawer-open {
 /* Status colors */
 .stat-ordered .stat-count { color: var(--gold); }
 .stat-ordered.active { border-color: var(--gold); }
+.stat-sewing .stat-count { color: #7b1fa2; }
+.stat-sewing.active { border-color: #7b1fa2; }
 .stat-delivering .stat-count { color: #1976d2; }
 .stat-delivering.active { border-color: #1976d2; }
 .stat-delivered .stat-count { color: #2e7d32; }
@@ -2489,6 +2491,12 @@ body.edit-drawer-open {
   background: rgba(201,168,76,0.12);
   color: #8b7025;
   border-color: var(--gold);
+}
+
+.order-status-select.status-sewing {
+  background: #f3e5f5;
+  color: #6a1b9a;
+  border-color: #ce93d8;
 }
 
 .order-status-select.status-delivering {
