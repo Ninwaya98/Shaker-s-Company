@@ -36,6 +36,69 @@ const logoutBtn   = document.getElementById('logout-btn');
 const toast       = document.getElementById('toast');
 
 // =====================
+// Image Compression
+// =====================
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
+async function compressImage(file) {
+  if (file.size <= MAX_FILE_SIZE) return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+
+      // Scale down if very large
+      const maxDim = 2048;
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Try decreasing quality until under 2MB
+      let quality = 0.85;
+      const tryCompress = () => {
+        canvas.toBlob((blob) => {
+          if (blob.size <= MAX_FILE_SIZE || quality <= 0.3) {
+            const compressed = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() });
+            resolve(compressed);
+          } else {
+            quality -= 0.1;
+            tryCompress();
+          }
+        }, 'image/jpeg', quality);
+      };
+      tryCompress();
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+async function compressFiles(files) {
+  const result = [];
+  for (const file of files) {
+    if (!file.type.startsWith('image/')) { result.push(file); continue; }
+    const compressed = await compressImage(file);
+    if (compressed.size !== file.size) {
+      const saved = ((1 - compressed.size / file.size) * 100).toFixed(0);
+      console.log(`Compressed ${file.name}: ${(file.size/1024/1024).toFixed(1)}MB → ${(compressed.size/1024/1024).toFixed(1)}MB (-${saved}%)`);
+    }
+    result.push(compressed);
+  }
+  return result;
+}
+
+// =====================
 // State
 // =====================
 let sectionsCache = { 'ready-made': [], 'tailored': [], 'fabrics': [] };
@@ -541,16 +604,14 @@ async function renderCategory(category) {
 async function quickUpload(files, category) {
   if (!files || files.length === 0) return;
 
-  const MAX_SIZE = 5 * 1024 * 1024;
-  const largeFiles = Array.from(files).filter(f => f.size > MAX_SIZE);
-  if (largeFiles.length > 0) {
-    const names = largeFiles.map(f => f.name).join(', ');
-    if (!confirm(`هذه الصور كبيرة الحجم (أكثر من 5MB):\n${names}\n\nهل تريد المتابعة؟`)) return;
-  }
+  // Auto-compress images over 2MB
+  const compressed = await compressFiles(Array.from(files));
+  const hasCompressed = compressed.some((f, i) => f.size !== Array.from(files)[i]?.size);
+  if (hasCompressed) showToast('تم ضغط بعض الصور تلقائياً', 'success');
 
   // Ready-made: redirect to upload modal with mandatory fields
   if (category === 'ready-made') {
-    uploadQueue = Array.from(files);
+    uploadQueue = compressed;
     uploadQueueIndex = 0;
     document.getElementById(`quick-file-${category}`).value = '';
     showUploadModal();
@@ -573,10 +634,9 @@ async function quickUpload(files, category) {
       snap.docs.forEach(d => { const o = d.data().order || 0; if (o > orderCounter) orderCounter = o; });
     }
 
-    const fileArr = Array.from(files);
     let done = 0;
 
-    for (const file of fileArr) {
+    for (const file of compressed) {
       try {
         const ext = file.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
@@ -587,7 +647,7 @@ async function quickUpload(files, category) {
           const task = uploadBytesResumable(storageRef, file);
           task.on('state_changed',
             snapshot => {
-              const pct = ((done + snapshot.bytesTransferred / snapshot.totalBytes) / fileArr.length) * 100;
+              const pct = ((done + snapshot.bytesTransferred / snapshot.totalBytes) / compressed.length) * 100;
               progressBar.style.width = `${Math.round(pct)}%`;
             },
             reject,
@@ -601,7 +661,7 @@ async function quickUpload(files, category) {
               };
               await addDoc(collection(db, 'images'), imgDoc);
               done++;
-              progressBar.style.width = `${Math.round((done / fileArr.length) * 100)}%`;
+              progressBar.style.width = `${Math.round((done / compressed.length) * 100)}%`;
               resolve();
             }
           );
@@ -1203,7 +1263,11 @@ function validateUploadForm() {
 async function submitUploadItem() {
   if (!validateUploadForm()) return;
 
-  const file = uploadQueue[uploadQueueIndex];
+  let file = uploadQueue[uploadQueueIndex];
+  if (file.size > MAX_FILE_SIZE) {
+    file = await compressImage(file);
+    uploadQueue[uploadQueueIndex] = file;
+  }
   const sectionId = umSection.value;
   const description = umName.value.trim();
   const price = Number(umPrice.value) || 0;
