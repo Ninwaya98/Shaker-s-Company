@@ -2241,6 +2241,8 @@ body.edit-drawer-open {
 /* Status colors */
 .stat-ordered .stat-count { color: var(--gold); }
 .stat-ordered.active { border-color: var(--gold); }
+.stat-delivering .stat-count { color: #1976d2; }
+.stat-delivering.active { border-color: #1976d2; }
 .stat-delivered .stat-count { color: #2e7d32; }
 .stat-delivered.active { border-color: #2e7d32; }
 .stat-returned .stat-count { color: var(--danger); }
@@ -2487,6 +2489,12 @@ body.edit-drawer-open {
   background: rgba(201,168,76,0.12);
   color: #8b7025;
   border-color: var(--gold);
+}
+
+.order-status-select.status-delivering {
+  background: #e3f2fd;
+  color: #1565c0;
+  border-color: #90caf9;
 }
 
 .order-status-select.status-delivered {

@@ -769,10 +769,11 @@ function buildSectionEl(section, images, category) {
 
 // ---- Order Tracking ----
 const TRACK_STATUS = {
-  'new':       { label: 'قيد المراجعة', icon: '🔵' },
-  'ordered':   { label: 'تم الطلب',     icon: '🟡' },
-  'delivered': { label: 'تم التوصيل',   icon: '🟢' },
-  'returned':  { label: 'مرتجع',       icon: '🔴' }
+  'new':        { label: 'قيد المراجعة',  icon: '🔵' },
+  'ordered':    { label: 'تم الطلب',      icon: '🟡' },
+  'delivering': { label: 'جاري التوصيل',  icon: '🚚' },
+  'delivered':  { label: 'تم التوصيل',    icon: '🟢' },
+  'returned':   { label: 'مرتجع',        icon: '🔴' }
 };
 
 function normalizePhone(phone) {

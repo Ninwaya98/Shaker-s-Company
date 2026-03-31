@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة التحكم — شاكر</title>
-  <link rel="stylesheet" href="../css/admin.css?v=9" />
+  <link rel="stylesheet" href="../css/admin.css?v=10" />
 </head>
 <body>
 
@@ -153,6 +153,10 @@
           <button class="stat-card stat-ordered" data-status="ordered">
             <span class="stat-count" id="stat-ordered-count">0</span>
             <span class="stat-label">تم الطلب</span>
+          </button>
+          <button class="stat-card stat-delivering" data-status="delivering">
+            <span class="stat-count" id="stat-delivering-count">0</span>
+            <span class="stat-label">جاري التوصيل</span>
           </button>
           <button class="stat-card stat-delivered" data-status="delivered">
             <span class="stat-count" id="stat-delivered-count">0</span>
@@ -373,7 +377,7 @@
   <!-- Scripts -->
   <script type="module">
     try {
-      await import('../js/admin.js?v=14');
+      await import('../js/admin.js?v=15');
     } catch (err) {
       alert('Script error: ' + err.message);
       console.error(err);
