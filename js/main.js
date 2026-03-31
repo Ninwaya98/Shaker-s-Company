@@ -433,23 +433,6 @@ async function submitOrder() {
     body: JSON.stringify(orderPayload)
   }).catch(() => {});
 
-  // Send to N8N → GHL WhatsApp
-  const n8nParams = new URLSearchParams({
-    orderId: orderPayload.orderId,
-    customerName, customerPhone,
-    fabricUrl, fabricLabel: orderPayload.fabricLabel,
-    fabricPrice: orderPayload.fabricPrice,
-    dishdashaType: orderPayload.dishdashaType,
-    collarType: orderPayload.collarType,
-    pocketType: orderPayload.pocketType,
-    sleeveType: orderPayload.sleeveType,
-    notes: notes || ''
-  });
-  // Add each measurement as its own param
-  values.forEach(v => { if (v) n8nParams.set(v.label, v.value); });
-  fetch(`https://n8n.srv1411989.hstgr.cloud/webhook/fd60b297-e889-45f4-aef4-cb0e74a6e3d8?${n8nParams}`)
-    .catch(() => {});
-
   // Show confirmation
   const confirmation = document.getElementById('order-confirmation');
   const orderNum     = document.getElementById('order-confirm-num');
@@ -566,14 +549,20 @@ async function submitReadymadeOrder() {
     }
   } catch {}
 
-  // Decrement quantity
+  // Decrement quantity (requires Firestore rule allowing public quantity updates)
   if (data.itemData.quantity > 0) {
+    const newQty = Math.max(0, data.itemData.quantity - 1);
     const imgDocUrl = `${FS_BASE}/images/${data.itemData.id}?key=${API_KEY}&updateMask.fieldPaths=quantity`;
-    fetch(imgDocUrl, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: { quantity: { integerValue: data.itemData.quantity - 1 } } })
-    }).catch(() => {});
+    try {
+      await fetch(imgDocUrl, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { quantity: { integerValue: newQty } } })
+      });
+      data.itemData.quantity = newQty;
+    } catch (e) {
+      console.error('Stock decrement failed:', e);
+    }
   }
 
   const orderPayload = {
@@ -594,17 +583,6 @@ async function submitReadymadeOrder() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(orderPayload)
   }).catch(() => {});
-
-  // N8N
-  const n8nParams = new URLSearchParams({
-    orderType: 'ready-made',
-    orderId: orderPayload.orderId,
-    customerName: name, customerPhone: phone,
-    itemName: data.label, imageUrl: data.url,
-    price: data.price, size, color
-  });
-  fetch(`https://n8n.srv1411989.hstgr.cloud/webhook/fd60b297-e889-45f4-aef4-cb0e74a6e3d8?${n8nParams}`)
-    .catch(() => {});
 
   // Show confirmation
   document.getElementById('modal-rm-order-num').textContent = docId ? `#${docId.slice(-6).toUpperCase()}` : '—';
@@ -761,12 +739,19 @@ function buildSectionEl(section, images, category) {
       card.appendChild(badge);
     }
 
-    // Out of stock overlay
-    if (category === 'ready-made' && img.quantity <= 0) {
-      const oos = document.createElement('div');
-      oos.className = 'out-of-stock-badge';
-      oos.innerHTML = '<span>نفذت الكمية</span>';
-      card.appendChild(oos);
+    // Stock count / out of stock for ready-made
+    if (category === 'ready-made') {
+      if (img.quantity <= 0) {
+        const oos = document.createElement('div');
+        oos.className = 'out-of-stock-badge';
+        oos.innerHTML = '<span>نفذت الكمية</span>';
+        card.appendChild(oos);
+      } else {
+        const stockBadge = document.createElement('div');
+        stockBadge.className = 'stock-badge';
+        stockBadge.textContent = `متبقي ${img.quantity} قطعة`;
+        card.appendChild(stockBadge);
+      }
     }
 
     const itemData = category === 'ready-made' ? { id: img.id, sizes: img.sizes, colors: img.colors, quantity: img.quantity } : null;

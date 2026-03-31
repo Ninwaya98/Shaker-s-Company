@@ -55,19 +55,8 @@
       <!-- Ready-Made Panel -->
       <div id="panel-ready-made" class="sections-panel active" role="tabpanel">
 
-        <!-- Upload Toolbar: section picker + add section -->
-        <div class="upload-toolbar">
-          <div class="upload-toolbar-row">
-            <label class="upload-toolbar-label">رفع إلى قسم:</label>
-            <select id="upload-section-ready-made" class="upload-section-select"></select>
-            <button class="btn-new-section" data-category="ready-made">+ قسم جديد</button>
-          </div>
-          <div class="add-section-inline" id="add-section-inline-ready-made">
-            <input type="text" class="inline-section-input" placeholder="اسم القسم الجديد..." maxlength="60" />
-            <button class="btn-add inline-section-save" data-category="ready-made">حفظ</button>
-            <button class="btn-cancel-inline" data-category="ready-made">إلغاء</button>
-          </div>
-        </div>
+        <!-- Section Pills -->
+        <div class="section-pills" id="section-pills-ready-made"></div>
 
         <!-- Big Upload Area -->
         <div class="quick-upload-area" id="quick-upload-ready-made">
@@ -91,30 +80,13 @@
           <div class="loading-text">جارٍ التحميل...</div>
         </div>
 
-        <!-- Sections Management -->
-        <details class="sections-toggle">
-          <summary>إدارة الأقسام</summary>
-          <div class="sections-organize">
-            <div class="sections-list" id="list-ready-made"></div>
-          </div>
-        </details>
       </div>
 
       <!-- Tailored Panel -->
       <div id="panel-tailored" class="sections-panel" role="tabpanel">
 
-        <div class="upload-toolbar">
-          <div class="upload-toolbar-row">
-            <label class="upload-toolbar-label">رفع إلى قسم:</label>
-            <select id="upload-section-tailored" class="upload-section-select"></select>
-            <button class="btn-new-section" data-category="tailored">+ قسم جديد</button>
-          </div>
-          <div class="add-section-inline" id="add-section-inline-tailored">
-            <input type="text" class="inline-section-input" placeholder="اسم القسم الجديد..." maxlength="60" />
-            <button class="btn-add inline-section-save" data-category="tailored">حفظ</button>
-            <button class="btn-cancel-inline" data-category="tailored">إلغاء</button>
-          </div>
-        </div>
+        <!-- Section Pills -->
+        <div class="section-pills" id="section-pills-tailored"></div>
 
         <div class="quick-upload-area" id="quick-upload-tailored">
           <input type="file" multiple accept="image/*" id="quick-file-tailored" />
@@ -135,29 +107,13 @@
           <div class="loading-text">جارٍ التحميل...</div>
         </div>
 
-        <details class="sections-toggle">
-          <summary>إدارة الأقسام</summary>
-          <div class="sections-organize">
-            <div class="sections-list" id="list-tailored"></div>
-          </div>
-        </details>
       </div>
 
       <!-- Fabrics Panel -->
       <div id="panel-fabrics" class="sections-panel" role="tabpanel">
 
-        <div class="upload-toolbar">
-          <div class="upload-toolbar-row">
-            <label class="upload-toolbar-label">رفع إلى قسم:</label>
-            <select id="upload-section-fabrics" class="upload-section-select"></select>
-            <button class="btn-new-section" data-category="fabrics">+ قسم جديد</button>
-          </div>
-          <div class="add-section-inline" id="add-section-inline-fabrics">
-            <input type="text" class="inline-section-input" placeholder="اسم القسم الجديد..." maxlength="60" />
-            <button class="btn-add inline-section-save" data-category="fabrics">حفظ</button>
-            <button class="btn-cancel-inline" data-category="fabrics">إلغاء</button>
-          </div>
-        </div>
+        <!-- Section Pills -->
+        <div class="section-pills" id="section-pills-fabrics"></div>
 
         <div class="quick-upload-area" id="quick-upload-fabrics">
           <input type="file" multiple accept="image/*" id="quick-file-fabrics" />
@@ -178,12 +134,6 @@
           <div class="loading-text">جارٍ التحميل...</div>
         </div>
 
-        <details class="sections-toggle">
-          <summary>إدارة الأقسام</summary>
-          <div class="sections-organize">
-            <div class="sections-list" id="list-fabrics"></div>
-          </div>
-        </details>
       </div>
 
     </main>

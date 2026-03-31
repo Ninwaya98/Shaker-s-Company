@@ -154,20 +154,12 @@ async function loadSectionsCache() {
 }
 
 // =====================
-// Populate upload section dropdowns
+// Active section tracking (per category)
 // =====================
-function populateUploadSectionSelect(category) {
-  const sel = document.getElementById(`upload-section-${category}`);
-  if (!sel) return;
-  const sections = sectionsCache[category];
-  sel.innerHTML = sections.map(s =>
-    `<option value="${s.id}">${escapeHtml(s.name)}${s.isDefault ? ' (رئيسي)' : ''}</option>`
-  ).join('');
-}
+let activeSectionId = { 'ready-made': null, 'tailored': null, 'fabrics': null };
 
 function getUploadSectionId(category) {
-  const sel = document.getElementById(`upload-section-${category}`);
-  if (sel && sel.value) return sel.value;
+  if (activeSectionId[category]) return activeSectionId[category];
   return getDefaultSectionId(category);
 }
 
@@ -178,139 +170,354 @@ function getDefaultSectionId(category) {
 }
 
 // =====================
-// Inline "add section" toolbar
+// Section Pills Bar
 // =====================
-document.querySelectorAll('.btn-new-section').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const category = btn.dataset.category;
-    const inline = document.getElementById(`add-section-inline-${category}`);
-    inline.classList.toggle('show');
-    if (inline.classList.contains('show')) {
-      inline.querySelector('.inline-section-input').focus();
+function renderSectionPills(category) {
+  const container = document.getElementById(`section-pills-${category}`);
+  if (!container) return;
+  const sections = sectionsCache[category];
+  container.innerHTML = '';
+
+  // Set default active if not set
+  if (!activeSectionId[category] || !sections.find(s => s.id === activeSectionId[category])) {
+    activeSectionId[category] = getDefaultSectionId(category);
+  }
+
+  sections.forEach((section, idx) => {
+    const pill = document.createElement('div');
+    pill.className = 'section-pill';
+    pill.dataset.sectionId = section.id;
+    pill.dataset.category = category;
+    pill.draggable = true;
+
+    if (section.isDefault) pill.classList.add('default');
+    if (section.id === activeSectionId[category]) pill.classList.add('active');
+
+    // Badge for default
+    const badge = document.createElement('span');
+    badge.className = 'pill-badge';
+    badge.textContent = 'رئيسي';
+    pill.appendChild(badge);
+
+    // Name (contenteditable on double-click)
+    const name = document.createElement('span');
+    name.className = 'pill-name';
+    name.textContent = section.name;
+    pill.appendChild(name);
+
+    // Arrow buttons
+    const arrows = document.createElement('span');
+    arrows.className = 'pill-arrows';
+    if (idx > 0) {
+      const leftArrow = document.createElement('button');
+      leftArrow.className = 'pill-arrow';
+      leftArrow.innerHTML = '►';
+      leftArrow.title = 'تقديم';
+      leftArrow.addEventListener('click', (e) => { e.stopPropagation(); reorderSection(category, section.id, -1); });
+      arrows.appendChild(leftArrow);
     }
-  });
-});
+    if (idx < sections.length - 1) {
+      const rightArrow = document.createElement('button');
+      rightArrow.className = 'pill-arrow';
+      rightArrow.innerHTML = '◄';
+      rightArrow.title = 'تأخير';
+      rightArrow.addEventListener('click', (e) => { e.stopPropagation(); reorderSection(category, section.id, 1); });
+      arrows.appendChild(rightArrow);
+    }
+    pill.appendChild(arrows);
 
-document.querySelectorAll('.btn-cancel-inline').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const category = btn.dataset.category;
-    const inline = document.getElementById(`add-section-inline-${category}`);
-    inline.classList.remove('show');
-    inline.querySelector('.inline-section-input').value = '';
-  });
-});
+    // Delete button (hidden for default)
+    const del = document.createElement('button');
+    del.className = 'pill-delete';
+    del.innerHTML = '✕';
+    del.title = 'حذف القسم';
+    del.addEventListener('click', (e) => { e.stopPropagation(); deleteSection(category, section); });
+    pill.appendChild(del);
 
-document.querySelectorAll('.inline-section-save').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const category = btn.dataset.category;
-    const inline = document.getElementById(`add-section-inline-${category}`);
-    const input = inline.querySelector('.inline-section-input');
+    // Click to select
+    pill.addEventListener('click', () => {
+      activeSectionId[category] = section.id;
+      container.querySelectorAll('.section-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+
+    // Double-click to rename
+    name.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      name.contentEditable = 'true';
+      name.focus();
+      // Select all text
+      const range = document.createRange();
+      range.selectNodeContents(name);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+
+    name.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); name.blur(); }
+      if (e.key === 'Escape') { name.textContent = section.name; name.contentEditable = 'false'; }
+    });
+
+    name.addEventListener('blur', () => {
+      name.contentEditable = 'false';
+      const newName = name.textContent.trim();
+      if (newName && newName !== section.name) {
+        renameSection(section.id, newName, category);
+      } else {
+        name.textContent = section.name;
+      }
+    });
+
+    // Drag handlers
+    pill.addEventListener('dragstart', (e) => {
+      pill.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', section.id);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    pill.addEventListener('dragend', () => {
+      pill.classList.remove('dragging');
+      container.querySelectorAll('.section-pill').forEach(p => p.classList.remove('drag-over'));
+    });
+
+    pill.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const dragging = container.querySelector('.dragging');
+      if (dragging && dragging !== pill) {
+        pill.classList.add('drag-over');
+      }
+    });
+
+    pill.addEventListener('dragleave', () => {
+      pill.classList.remove('drag-over');
+    });
+
+    pill.addEventListener('drop', async (e) => {
+      e.preventDefault();
+      pill.classList.remove('drag-over');
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if (draggedId && draggedId !== section.id) {
+        await reorderByDrop(category, draggedId, section.id);
+      }
+    });
+
+    // Touch drag support
+    let touchStartX = 0;
+    let touchClone = null;
+
+    pill.addEventListener('touchstart', (e) => {
+      // Only start drag on long press (handled via CSS or timer)
+      touchStartX = e.touches[0].clientX;
+    }, { passive: true });
+
+    container.appendChild(pill);
+  });
+
+  // Add section button
+  const addBtn = document.createElement('button');
+  addBtn.className = 'section-pill-add';
+  addBtn.innerHTML = '+ قسم جديد';
+  addBtn.addEventListener('click', () => {
+    showAddSectionInput(category, container, addBtn);
+  });
+  container.appendChild(addBtn);
+}
+
+// =====================
+// Add Section (inline input in pill bar)
+// =====================
+function showAddSectionInput(category, container, addBtn) {
+  // Replace the + button with an input form
+  const wrapper = document.createElement('div');
+  wrapper.className = 'section-pill-add';
+  wrapper.style.borderStyle = 'solid';
+  wrapper.style.background = '#fff';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'اسم القسم...';
+  input.maxLength = 60;
+
+  const actions = document.createElement('span');
+  actions.className = 'pill-add-actions';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'pill-add-btn';
+  saveBtn.textContent = '✓';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'pill-cancel-btn';
+  cancelBtn.textContent = '✕';
+
+  actions.appendChild(saveBtn);
+  actions.appendChild(cancelBtn);
+  wrapper.appendChild(input);
+  wrapper.appendChild(actions);
+
+  addBtn.replaceWith(wrapper);
+  input.focus();
+
+  async function save() {
     const name = input.value.trim();
     if (!name) { input.focus(); return; }
 
-    btn.disabled = true;
-    btn.textContent = 'جارٍ الحفظ...';
-
+    saveBtn.disabled = true;
     try {
       let maxOrder = 0;
       sectionsCache[category].forEach(s => { if ((s.order || 0) > maxOrder) maxOrder = s.order; });
 
-      await addDoc(collection(db, 'sections'), {
+      const newDoc = await addDoc(collection(db, 'sections'), {
         name, category, order: maxOrder + 1, createdAt: serverTimestamp()
       });
 
-      input.value = '';
-      inline.classList.remove('show');
       showToast('تم إضافة القسم', 'success');
-
       await loadSectionsCache();
-      populateUploadSectionSelect(category);
-      renderSectionsList(category);
+      activeSectionId[category] = newDoc.id;
+      renderSectionPills(category);
       await loadPhotos(category);
-
-      // Select the new section in the dropdown
-      const sel = document.getElementById(`upload-section-${category}`);
-      const newSection = sectionsCache[category].find(s => s.name === name);
-      if (sel && newSection) sel.value = newSection.id;
-
     } catch (err) {
       console.error(err);
       showToast('حدث خطأ', 'error');
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'حفظ';
+      wrapper.replaceWith(addBtn);
     }
-  });
-});
+  }
 
-// Allow Enter key in inline input
-document.querySelectorAll('.inline-section-input').forEach(input => {
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      input.closest('.add-section-inline').querySelector('.inline-section-save').click();
-    }
-    if (e.key === 'Escape') {
-      input.closest('.add-section-inline').querySelector('.btn-cancel-inline').click();
-    }
+  function cancel() {
+    wrapper.replaceWith(addBtn);
+  }
+
+  saveBtn.addEventListener('click', save);
+  cancelBtn.addEventListener('click', cancel);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); save(); }
+    if (e.key === 'Escape') cancel();
   });
-});
+}
+
+// =====================
+// Rename Section
+// =====================
+async function renameSection(sectionId, newName, category) {
+  try {
+    await updateDoc(doc(db, 'sections', sectionId), { name: newName });
+    // Update cache
+    const section = sectionsCache[category].find(s => s.id === sectionId);
+    if (section) section.name = newName;
+    showToast('تم تغيير الاسم', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر تغيير الاسم', 'error');
+    renderSectionPills(category); // revert display
+  }
+}
+
+// =====================
+// Reorder Section (arrow buttons)
+// =====================
+async function reorderSection(category, sectionId, direction) {
+  const sections = sectionsCache[category];
+  const idx = sections.findIndex(s => s.id === sectionId);
+  const swapIdx = idx + direction;
+  if (swapIdx < 0 || swapIdx >= sections.length) return;
+
+  const a = sections[idx];
+  const b = sections[swapIdx];
+
+  try {
+    const batchOp = writeBatch(db);
+    const tempOrder = a.order;
+    batchOp.update(doc(db, 'sections', a.id), { order: b.order });
+    batchOp.update(doc(db, 'sections', b.id), { order: tempOrder });
+    await batchOp.commit();
+
+    // Swap in cache
+    const tmp = a.order;
+    a.order = b.order;
+    b.order = tmp;
+    sectionsCache[category].sort((x, y) => (x.order || 0) - (y.order || 0));
+
+    renderSectionPills(category);
+    await loadPhotos(category);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر إعادة الترتيب', 'error');
+  }
+}
+
+// =====================
+// Reorder by Drag & Drop
+// =====================
+async function reorderByDrop(category, draggedId, targetId) {
+  const sections = sectionsCache[category];
+  const draggedIdx = sections.findIndex(s => s.id === draggedId);
+  const targetIdx = sections.findIndex(s => s.id === targetId);
+  if (draggedIdx === -1 || targetIdx === -1) return;
+
+  // Move dragged to target position
+  const [moved] = sections.splice(draggedIdx, 1);
+  sections.splice(targetIdx, 0, moved);
+
+  // Reassign order values
+  try {
+    const batchOp = writeBatch(db);
+    sections.forEach((s, i) => {
+      const newOrder = i + 1;
+      if (s.order !== newOrder) {
+        batchOp.update(doc(db, 'sections', s.id), { order: newOrder });
+        s.order = newOrder;
+      }
+    });
+    await batchOp.commit();
+
+    renderSectionPills(category);
+    await loadPhotos(category);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر إعادة الترتيب', 'error');
+    await loadSectionsCache();
+    renderSectionPills(category);
+  }
+}
+
+// =====================
+// Delete Section
+// =====================
+async function deleteSection(category, section) {
+  if (section.isDefault) { showToast('لا يمكن حذف القسم الرئيسي', 'error'); return; }
+  if (!confirm(`حذف قسم "${section.name}"؟ سيتم نقل صوره إلى القسم الرئيسي.`)) return;
+
+  try {
+    const defaultId = getDefaultSectionId(category);
+    const imgSnap = await getDocs(query(collection(db, 'images'), where('sectionId', '==', section.id)));
+    const batchOp = writeBatch(db);
+    imgSnap.docs.forEach(imgDoc => { batchOp.update(imgDoc.ref, { sectionId: defaultId }); });
+    batchOp.delete(doc(db, 'sections', section.id));
+    await batchOp.commit();
+
+    showToast('تم حذف القسم ونقل صوره', 'success');
+
+    // If deleted section was active, switch to default
+    if (activeSectionId[category] === section.id) {
+      activeSectionId[category] = defaultId;
+    }
+
+    await loadSectionsCache();
+    renderSectionPills(category);
+    await loadPhotos(category);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر حذف القسم', 'error');
+  }
+}
 
 // =====================
 // Render full category panel
 // =====================
 async function renderCategory(category) {
-  populateUploadSectionSelect(category);
-  renderSectionsList(category);
+  renderSectionPills(category);
   await loadPhotos(category);
-}
-
-// =====================
-// Render Sections List (in the details/summary)
-// =====================
-function renderSectionsList(category) {
-  const container = document.getElementById(`list-${category}`);
-  const sections = sectionsCache[category];
-  container.innerHTML = '';
-
-  if (sections.length === 0) {
-    container.innerHTML = '<div class="loading-text">لا توجد أقسام.</div>';
-    return;
-  }
-
-  sections.forEach(section => {
-    const row = document.createElement('div');
-    row.className = 'section-row';
-    row.innerHTML = `
-      <span class="section-row-name">${escapeHtml(section.name)}</span>
-      <span class="section-row-badge">${section.isDefault ? 'رئيسي' : ''}</span>
-      <button class="section-row-delete" title="حذف">✕</button>
-    `;
-
-    row.querySelector('.section-row-delete').addEventListener('click', async () => {
-      if (section.isDefault) { showToast('لا يمكن حذف القسم الرئيسي', 'error'); return; }
-      if (!confirm(`حذف قسم "${section.name}"؟ سيتم نقل صوره إلى القسم الرئيسي.`)) return;
-
-      try {
-        const defaultId = getDefaultSectionId(category);
-        const imgSnap = await getDocs(query(collection(db, 'images'), where('sectionId', '==', section.id)));
-        const batch = writeBatch(db);
-        imgSnap.docs.forEach(imgDoc => { batch.update(imgDoc.ref, { sectionId: defaultId }); });
-        batch.delete(doc(db, 'sections', section.id));
-        await batch.commit();
-
-        showToast('تم حذف القسم ونقل صوره', 'success');
-        await loadSectionsCache();
-        populateUploadSectionSelect(category);
-        await renderCategory(category);
-      } catch (err) {
-        console.error(err);
-        showToast('تعذّر حذف القسم', 'error');
-      }
-    });
-
-    container.appendChild(row);
-  });
 }
 
 // =====================

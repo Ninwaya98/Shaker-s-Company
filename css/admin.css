@@ -467,30 +467,6 @@ img { display: block; max-width: 100%; }
   margin-bottom: 2rem;
 }
 
-/* Sections Toggle — optional organization */
-.sections-toggle {
-  border: 1px solid var(--cream-dark);
-  border-radius: var(--radius);
-  margin-top: 1rem;
-}
-
-.sections-toggle summary {
-  padding: 1rem 1.25rem;
-  cursor: pointer;
-  font-weight: 600;
-  color: #888;
-  font-size: 0.9rem;
-  user-select: none;
-}
-
-.sections-toggle summary:hover {
-  color: var(--navy);
-}
-
-.sections-organize {
-  padding: 1.25rem;
-  border-top: 1px solid var(--cream-dark);
-}
 
 /* Old upload area (inside sections) */
 .upload-area {
@@ -656,52 +632,6 @@ img { display: block; max-width: 100%; }
   border-radius: 20px;
 }
 
-/* Section Row (in sections list) */
-.section-row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid var(--cream-dark);
-}
-
-.section-row:last-child {
-  border-bottom: none;
-}
-
-.section-row-name {
-  flex: 1;
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.section-row-badge {
-  font-size: 0.7rem;
-  color: var(--gold);
-  background: rgba(201,168,76,0.12);
-  padding: 0.15rem 0.5rem;
-  border-radius: 12px;
-}
-
-.section-row-badge:empty {
-  display: none;
-}
-
-.section-row-delete {
-  background: transparent;
-  border: none;
-  color: #ccc;
-  cursor: pointer;
-  font-size: 0.85rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 4px;
-  transition: color var(--transition), background var(--transition);
-}
-
-.section-row-delete:hover {
-  color: var(--danger);
-  background: var(--danger-light);
-}
 
 /* Toast notification */
 .toast {
@@ -921,109 +851,277 @@ img { display: block; max-width: 100%; }
 .sel-btn-copy-urls:hover { background: rgba(255,255,255,0.14); color: #fff; }
 
 /* =====================
-   Upload Toolbar
+   Section Pills Bar
    ===================== */
-.upload-toolbar {
-  background: #fff;
-  border: 1.5px solid var(--cream-dark);
-  border-radius: var(--radius);
-  padding: 0.85rem 1.1rem;
-  margin-bottom: 1rem;
-}
-
-.upload-toolbar-row {
+.section-pills {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-.upload-toolbar-label {
-  font-size: 0.9rem;
+.section-pills::-webkit-scrollbar {
+  height: 3px;
+}
+.section-pills::-webkit-scrollbar-track {
+  background: transparent;
+}
+.section-pills::-webkit-scrollbar-thumb {
+  background: var(--cream-dark);
+  border-radius: 3px;
+}
+
+.section-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  background: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 40px;
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+  user-select: none;
+  position: relative;
+}
+
+.section-pill:hover {
+  border-color: var(--gold);
+  box-shadow: 0 2px 8px rgba(201,168,76,0.15);
+}
+
+.section-pill.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+  box-shadow: 0 2px 12px rgba(201,168,76,0.3);
+}
+
+.section-pill.default .pill-badge {
+  display: inline-block;
+}
+
+.pill-badge {
+  display: none;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--gold);
+  background: rgba(201,168,76,0.15);
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-right: 0.15rem;
+}
+
+.section-pill.active .pill-badge {
+  color: var(--navy);
+  background: rgba(11,28,61,0.15);
+}
+
+.pill-name {
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.88rem;
   font-weight: 600;
   color: var(--navy);
-  white-space: nowrap;
-}
-
-.upload-section-select {
-  flex: 1;
-  min-width: 140px;
-  background: var(--cream);
-  border: 1.5px solid var(--border);
-  border-radius: 8px;
-  font-family: 'Cairo', sans-serif;
-  font-size: 0.95rem;
-  color: var(--navy);
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  direction: rtl;
   outline: none;
-}
-
-.upload-section-select:focus {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
-}
-
-.btn-new-section {
+  border: none;
   background: transparent;
+  min-width: 20px;
+  line-height: 1.3;
+}
+
+.section-pill.active .pill-name {
+  color: var(--navy);
+}
+
+.pill-name[contenteditable="true"] {
+  border-bottom: 1.5px dashed var(--navy);
+  padding-bottom: 1px;
+  cursor: text;
+}
+
+.pill-arrows {
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.section-pill:hover .pill-arrows {
+  opacity: 1;
+}
+
+.pill-arrow {
+  background: transparent;
+  border: none;
+  color: var(--navy);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 2px 3px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), color var(--transition);
+  opacity: 0.5;
+}
+
+.pill-arrow:hover {
+  background: rgba(11,28,61,0.1);
+  opacity: 1;
+}
+
+.section-pill.active .pill-arrow:hover {
+  background: rgba(11,28,61,0.15);
+}
+
+.pill-delete {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--transition), background var(--transition);
+  opacity: 0;
+}
+
+.section-pill:hover .pill-delete {
+  opacity: 1;
+}
+
+.pill-delete:hover {
+  color: var(--danger);
+  background: rgba(229,57,53,0.1);
+}
+
+.section-pill.default .pill-delete {
+  display: none;
+}
+
+/* Drag state */
+.section-pill.dragging {
+  opacity: 0.5;
+  transform: scale(0.95);
+}
+
+.section-pill.drag-over {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(201,168,76,0.3);
+}
+
+/* Add section pill */
+.section-pill-add {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
   border: 1.5px dashed var(--gold);
-  color: var(--gold);
+  border-radius: 50px;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 40px;
   font-family: 'Cairo', sans-serif;
   font-size: 0.85rem;
   font-weight: 700;
-  padding: 0.5rem 0.9rem;
-  border-radius: 8px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--transition), color var(--transition);
+  color: var(--gold);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
 }
 
-.btn-new-section:hover {
+.section-pill-add:hover {
   background: var(--gold);
   color: var(--navy);
+  border-style: solid;
 }
 
-/* Inline add section form */
-.add-section-inline {
-  display: none;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.add-section-inline.show {
-  display: flex;
-}
-
-.inline-section-input {
-  flex: 1;
-  min-width: 140px;
-  padding: 0.5rem 0.85rem;
-  border: 1.5px solid var(--gold);
-  border-radius: 8px;
-  font-family: 'Cairo', sans-serif;
-  font-size: 0.95rem;
-  color: var(--navy);
-  outline: none;
-}
-
-.btn-cancel-inline {
+.section-pill-add input {
   background: transparent;
-  border: 1.5px solid var(--border);
-  color: #888;
+  border: none;
+  outline: none;
   font-family: 'Cairo', sans-serif;
-  font-size: 0.85rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: border-color var(--transition), color var(--transition);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--navy);
+  width: 120px;
+  direction: rtl;
 }
 
-.btn-cancel-inline:hover {
-  border-color: var(--danger);
-  color: var(--danger);
+.section-pill-add input::placeholder {
+  color: rgba(11,28,61,0.4);
+}
+
+.section-pill-add .pill-add-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.section-pill-add .pill-add-btn {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-pill-add .pill-cancel-btn {
+  background: transparent;
+  color: #999;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Touch devices — always show arrows and delete */
+@media (hover: none), (pointer: coarse) {
+  .pill-arrows {
+    opacity: 1;
+  }
+  .pill-delete {
+    opacity: 1;
+  }
+  .section-pill {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 700px) {
+  .section-pills {
+    gap: 0.4rem;
+    padding: 0.4rem 0;
+    margin-bottom: 0.75rem;
+  }
+  .section-pill {
+    padding: 0.4rem 0.7rem;
+    min-height: 44px;
+  }
+  .pill-name {
+    font-size: 0.82rem;
+  }
 }
 
 /* =====================
