@@ -1607,10 +1607,8 @@ let ordersFilterStatus = null;
 let ordersFilterType = 'all';
 
 const STATUS_CONFIG = {
-  'new':       { label: 'جديد',       color: '#1976d2' },
   'ordered':   { label: 'تم الطلب',    color: '#C9A84C' },
   'delivered': { label: 'تم التوصيل',  color: '#2e7d32' },
-  'sold':      { label: 'مباع',       color: '#0B1C3D' },
   'returned':  { label: 'مرتجع',      color: '#e53935' }
 };
 
@@ -1668,7 +1666,7 @@ async function loadOrders() {
         orderType: data.orderType || 'tailored',
         customerName: data.customerName || '',
         customerPhone: data.customerPhone || '',
-        status: data.status || 'new',
+        status: (data.status === 'new' || data.status === 'sold' || !data.status) ? 'ordered' : data.status,
         createdAt: parseTimestamp(data.createdAt),
         updatedAt: parseTimestamp(data.updatedAt),
         measurements,
@@ -1707,7 +1705,7 @@ function renderOrdersView() {
 
 // Stats cards
 function renderStats() {
-  const counts = { new: 0, ordered: 0, delivered: 0, sold: 0, returned: 0 };
+  const counts = { ordered: 0, delivered: 0, returned: 0 };
   let totalSales = 0;
   let monthlySales = 0;
   const now = new Date();
@@ -1715,10 +1713,10 @@ function renderStats() {
   const thisYear = now.getFullYear();
 
   allOrders.forEach(order => {
-    const status = order.status || 'new';
+    const status = order.status || 'ordered';
     if (counts[status] !== undefined) counts[status]++;
 
-    if (status === 'sold' && order.price > 0) {
+    if (status === 'delivered' && order.price > 0) {
       totalSales += order.price;
       if (order.createdAt.getMonth() === thisMonth && order.createdAt.getFullYear() === thisYear) {
         monthlySales += order.price;
@@ -1726,10 +1724,8 @@ function renderStats() {
     }
   });
 
-  document.getElementById('stat-new-count').textContent = counts.new;
   document.getElementById('stat-ordered-count').textContent = counts.ordered;
   document.getElementById('stat-delivered-count').textContent = counts.delivered;
-  document.getElementById('stat-sold-count').textContent = counts.sold;
   document.getElementById('stat-returned-count').textContent = counts.returned;
 
   document.getElementById('total-sales').textContent = totalSales > 0 ? `${totalSales.toLocaleString()} د.ع` : '0 د.ع';
@@ -1857,6 +1853,43 @@ function renderOrderCard(order) {
         renderStats();
       });
     }
+  }
+
+  // Restock button (for ordered/returned ready-made items)
+  if (isReadyMade && order.imageId && (order.status === 'ordered' || order.status === 'returned')) {
+    const restockBtn = document.createElement('button');
+    restockBtn.className = 'order-restock-btn';
+    restockBtn.innerHTML = '↩ إرجاع للمخزن';
+    restockBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!confirm('هل تريد إرجاع هذه القطعة إلى المخزن؟ سيتم زيادة الكمية.')) return;
+      restockBtn.disabled = true;
+      restockBtn.textContent = 'جارٍ...';
+      try {
+        // Increment quantity on the product image doc
+        const imgSnap = await getDocs(query(collection(db, 'images'), where('__name__', '==', order.imageId)));
+        if (!imgSnap.empty) {
+          const imgDoc = imgSnap.docs[0];
+          const currentQty = Number(imgDoc.data().quantity) || 0;
+          await updateDoc(doc(db, 'images', order.imageId), { quantity: currentQty + 1 });
+        }
+        // Update order status to returned if it was ordered
+        await updateDoc(doc(db, 'orders', order.id), {
+          status: 'returned',
+          restocked: true,
+          updatedAt: serverTimestamp()
+        });
+        order.status = 'returned';
+        showToast('تم إرجاع القطعة للمخزن', 'success');
+        loadOrders(); // Refresh
+      } catch (err) {
+        console.error('Restock failed:', err);
+        showToast('تعذّر إرجاع القطعة', 'error');
+        restockBtn.disabled = false;
+        restockBtn.innerHTML = '↩ إرجاع للمخزن';
+      }
+    });
+    body.appendChild(restockBtn);
   }
 
   card.appendChild(body);

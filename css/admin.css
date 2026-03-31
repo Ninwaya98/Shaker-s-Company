@@ -2239,14 +2239,10 @@ body.edit-drawer-open {
 }
 
 /* Status colors */
-.stat-new .stat-count { color: #1976d2; }
-.stat-new.active { border-color: #1976d2; }
 .stat-ordered .stat-count { color: var(--gold); }
 .stat-ordered.active { border-color: var(--gold); }
 .stat-delivered .stat-count { color: #2e7d32; }
 .stat-delivered.active { border-color: #2e7d32; }
-.stat-sold .stat-count { color: var(--navy); }
-.stat-sold.active { border-color: var(--navy); }
 .stat-returned .stat-count { color: var(--danger); }
 .stat-returned.active { border-color: var(--danger); }
 
@@ -2473,12 +2469,6 @@ body.edit-drawer-open {
   direction: rtl;
 }
 
-.order-status-select.status-new {
-  background: #e3f2fd;
-  color: #1565c0;
-  border-color: #90caf9;
-}
-
 .order-status-select.status-ordered {
   background: rgba(201,168,76,0.12);
   color: #8b7025;
@@ -2489,12 +2479,6 @@ body.edit-drawer-open {
   background: #e8f5e9;
   color: #2e7d32;
   border-color: #a5d6a7;
-}
-
-.order-status-select.status-sold {
-  background: var(--navy);
-  color: var(--gold);
-  border-color: var(--navy);
 }
 
 .order-status-select.status-returned {
@@ -2603,6 +2587,36 @@ body.edit-drawer-open {
 
 .order-notes strong {
   color: var(--navy);
+}
+
+/* Restock button */
+.order-restock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  padding: 0.55rem 1.25rem;
+  background: rgba(25,118,210,0.08);
+  color: #1565c0;
+  border: 1.5px solid rgba(25,118,210,0.25);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  width: 100%;
+}
+
+.order-restock-btn:hover {
+  background: rgba(25,118,210,0.15);
+  border-color: #1976d2;
+}
+
+.order-restock-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Order ID */

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة التحكم — شاكر</title>
-  <link rel="stylesheet" href="../css/admin.css?v=7" />
+  <link rel="stylesheet" href="../css/admin.css?v=8" />
 </head>
 <body>
 
@@ -150,10 +150,6 @@
 
         <!-- Summary Cards -->
         <div class="stats-cards" id="stats-cards">
-          <button class="stat-card stat-new" data-status="new">
-            <span class="stat-count" id="stat-new-count">0</span>
-            <span class="stat-label">جديد</span>
-          </button>
           <button class="stat-card stat-ordered" data-status="ordered">
             <span class="stat-count" id="stat-ordered-count">0</span>
             <span class="stat-label">تم الطلب</span>
@@ -161,10 +157,6 @@
           <button class="stat-card stat-delivered" data-status="delivered">
             <span class="stat-count" id="stat-delivered-count">0</span>
             <span class="stat-label">تم التوصيل</span>
-          </button>
-          <button class="stat-card stat-sold" data-status="sold">
-            <span class="stat-count" id="stat-sold-count">0</span>
-            <span class="stat-label">مباع</span>
           </button>
           <button class="stat-card stat-returned" data-status="returned">
             <span class="stat-count" id="stat-returned-count">0</span>
@@ -381,7 +373,7 @@
   <!-- Scripts -->
   <script type="module">
     try {
-      await import('../js/admin.js?v=12');
+      await import('../js/admin.js?v=13');
     } catch (err) {
       alert('Script error: ' + err.message);
       console.error(err);
