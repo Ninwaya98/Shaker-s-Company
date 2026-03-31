@@ -15,8 +15,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
-  writeBatch,
-  orderBy
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 import {
   ref,
@@ -1642,10 +1641,8 @@ ordersToggleBtn.addEventListener('click', () => {
 async function loadOrders() {
   ordersList.innerHTML = '<div class="loading-text">جارٍ تحميل الطلبات...</div>';
   try {
-    const snap = await getDocs(query(
-      collection(db, 'orders'),
-      orderBy('createdAt', 'desc')
-    ));
+    const snap = await getDocs(collection(db, 'orders'));
+    console.log(`Loaded ${snap.docs.length} orders`);
     allOrders = snap.docs.map(d => {
       const data = d.data();
       return {
@@ -1658,10 +1655,12 @@ async function loadOrders() {
         status: data.status || 'new'
       };
     });
+    // Sort newest first (client-side — avoids index issues)
+    allOrders.sort((a, b) => b.createdAt - a.createdAt);
     renderOrdersView();
   } catch (err) {
     console.error('Failed to load orders:', err);
-    ordersList.innerHTML = '<div class="loading-text">تعذّر تحميل الطلبات.</div>';
+    ordersList.innerHTML = `<div class="loading-text">تعذّر تحميل الطلبات: ${err.message}</div>`;
   }
 }
 
