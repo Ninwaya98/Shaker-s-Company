@@ -1622,23 +1622,47 @@ const COLLAR_LABELS = { '1': 'ياخة قميص كبيرة', '2': 'ياخة قم
 const POCKET_LABELS = { '1': 'جيب ١', '2': 'جيب ٢', '3': 'جيب ٣', '4': 'جيب ٤' };
 const SLEEVE_LABELS = { 'flat': 'فلات', 'bazma': 'بزمة' };
 
-// Toggle between products and orders views
-if (ordersToggleBtn) {
-  ordersToggleBtn.addEventListener('click', () => {
-    const isOrders = ordersView.classList.contains('visible');
-    if (isOrders) {
-      ordersView.classList.remove('visible');
+// 3-way view toggle: gallery / orders / measurements
+const measurementsToggleBtn = document.getElementById('measurements-toggle-btn');
+const measurementsView = document.getElementById('measurements-view');
+let activeView = 'gallery';
+
+function switchView(viewName) {
+  ordersView.classList.remove('visible');
+  if (measurementsView) measurementsView.classList.remove('visible');
+  adminMain.style.display = 'none';
+  ordersToggleBtn.classList.remove('active');
+  if (measurementsToggleBtn) measurementsToggleBtn.classList.remove('active');
+
+  switch (viewName) {
+    case 'gallery':
       adminMain.style.display = '';
-      ordersToggleBtn.classList.remove('active');
-    } else {
+      break;
+    case 'orders':
       ordersView.classList.add('visible');
-      adminMain.style.display = 'none';
       ordersToggleBtn.classList.add('active');
       loadOrders();
-    }
+      break;
+    case 'measurements':
+      if (measurementsView) {
+        measurementsView.classList.add('visible');
+        measurementsToggleBtn.classList.add('active');
+        loadMeasurements();
+      }
+      break;
+  }
+  activeView = viewName;
+}
+
+if (ordersToggleBtn) {
+  ordersToggleBtn.addEventListener('click', () => {
+    switchView(activeView === 'orders' ? 'gallery' : 'orders');
   });
-} else {
-  console.error('Orders toggle button not found');
+}
+if (measurementsToggleBtn) {
+  measurementsToggleBtn.addEventListener('click', () => {
+    switchView(activeView === 'measurements' ? 'gallery' : 'measurements');
+  });
 }
 
 // Load all orders from Firestore
@@ -2041,3 +2065,374 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 }
+
+
+// =============================================
+// Measurements Section (القياسات)
+// =============================================
+let allMeasurements = [];
+let measSearchMode = 'text';
+let measTolerance = 2;
+let measEditingId = null;
+let measLoaded = false;
+
+// --- Load ---
+async function loadMeasurements() {
+  if (measLoaded) { renderMeasList(); return; }
+  const list = document.getElementById('meas-list');
+  if (!list) return;
+  list.innerHTML = '<div class="loading-text">جارٍ تحميل القياسات...</div>';
+  try {
+    const snap = await getDocs(collection(db, 'measurements'));
+    allMeasurements = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    allMeasurements.sort((a, b) => {
+      const numA = parseInt(a.fileNumber) || 0;
+      const numB = parseInt(b.fileNumber) || 0;
+      return numB - numA;
+    });
+    measLoaded = true;
+    renderMeasStats();
+    renderMeasList();
+  } catch (err) {
+    console.error('Error loading measurements:', err);
+    list.innerHTML = '<div class="loading-text">تعذّر تحميل القياسات</div>';
+  }
+}
+
+// --- Stats ---
+function renderMeasStats() {
+  const totalEl = document.getElementById('meas-stat-total');
+  const waEl = document.getElementById('meas-stat-whatsapp');
+  if (totalEl) totalEl.textContent = allMeasurements.length;
+  if (waEl) waEl.textContent = allMeasurements.filter(m => m.whatsappNumber && m.whatsappNumber.length > 5).length;
+}
+
+// --- Filter ---
+function getFilteredMeasurements() {
+  const q = (document.getElementById('meas-search-input')?.value || '').trim().toLowerCase();
+  if (!q) return allMeasurements;
+  return allMeasurements.filter(m =>
+    (m.customerName || '').toLowerCase().includes(q) ||
+    (m.fileNumber || '').toLowerCase().includes(q) ||
+    (m.whatsappNumber || '').includes(q) ||
+    (m.designType || '').toLowerCase().includes(q)
+  );
+}
+
+function searchByMeasurements() {
+  const shoulder = parseInt(document.getElementById('search-shoulder')?.value);
+  const sleeve = parseInt(document.getElementById('search-sleeve')?.value);
+  const sleeveWidth = parseInt(document.getElementById('search-sleeveWidth')?.value);
+  const chest = parseInt(document.getElementById('search-chest')?.value);
+  const length = parseInt(document.getElementById('search-length')?.value);
+  const neck = parseInt(document.getElementById('search-neck')?.value);
+  const tol = measTolerance;
+
+  const hasAny = [shoulder, sleeve, sleeveWidth, chest, length, neck].some(v => !isNaN(v));
+  if (!hasAny) { showToast('أدخل قياس واحد على الأقل', 'error'); return; }
+
+  const results = allMeasurements.filter(m => {
+    if (!isNaN(shoulder) && Math.abs((m.shoulderMeasurement || 0) - shoulder) > tol) return false;
+    if (!isNaN(sleeve) && Math.abs((m.sleeveMeasurement || 0) - sleeve) > tol) return false;
+    if (!isNaN(sleeveWidth) && m.sleeveWidthMeasurement && Math.abs(m.sleeveWidthMeasurement - sleeveWidth) > tol) return false;
+    if (!isNaN(chest) && Math.abs((m.chestMeasurement || 0) - chest) > tol) return false;
+    if (!isNaN(length) && Math.abs((m.lengthMeasurement || 0) - length) > tol) return false;
+    if (!isNaN(neck) && Math.abs((m.neckMeasurement || 0) - neck) > tol) return false;
+    return true;
+  });
+
+  renderMeasList(results);
+  showToast(`تم العثور على ${results.length} نتيجة`, results.length > 0 ? 'success' : 'error');
+}
+
+// --- Render List ---
+function renderMeasList(data) {
+  const list = document.getElementById('meas-list');
+  if (!list) return;
+  const items = data || (measSearchMode === 'text' ? getFilteredMeasurements() : allMeasurements);
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="meas-empty">لا توجد قياسات</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  items.forEach(m => list.appendChild(renderMeasCard(m)));
+}
+
+// --- Single Card ---
+function renderMeasCard(m) {
+  const card = document.createElement('div');
+  card.className = 'meas-card';
+  card.dataset.id = m.id;
+
+  const cleanPhone = (m.whatsappNumber || '').replace(/[^0-9+]/g, '');
+  const waLink = cleanPhone.length > 5 ? `https://wa.me/${cleanPhone.replace('+', '')}` : '';
+
+  const header = document.createElement('div');
+  header.className = 'meas-card-header';
+  header.innerHTML = `
+    <div class="meas-card-info">
+      <div class="meas-card-name">${escapeHtml(m.customerName)}</div>
+      <div class="meas-card-meta">
+        <span class="meas-file-badge">#${escapeHtml(m.fileNumber)}</span>
+        ${m.designType ? `<span class="meas-design-badge">${escapeHtml(m.designType)}</span>` : ''}
+        ${waLink ? `<a class="order-phone-link" href="${waLink}" target="_blank" onclick="event.stopPropagation()">${escapeHtml(m.whatsappNumber)}</a>` : ''}
+      </div>
+    </div>
+    <div class="meas-card-actions">
+      <button class="meas-edit-btn" title="تعديل">✎</button>
+      <button class="meas-delete-btn" title="حذف">✕</button>
+    </div>
+    <span class="meas-expand-icon">▼</span>
+  `;
+
+  header.addEventListener('click', (e) => {
+    if (e.target.closest('.meas-edit-btn') || e.target.closest('.meas-delete-btn') || e.target.closest('a')) return;
+    card.classList.toggle('expanded');
+  });
+
+  header.querySelector('.meas-edit-btn').addEventListener('click', () => openMeasDrawer(m));
+
+  header.querySelector('.meas-delete-btn').addEventListener('click', async () => {
+    if (!confirm(`حذف قياس "${m.customerName}"؟`)) return;
+    try {
+      await deleteDoc(doc(db, 'measurements', m.id));
+      allMeasurements = allMeasurements.filter(x => x.id !== m.id);
+      card.remove();
+      renderMeasStats();
+      showToast('تم حذف القياس', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('تعذّر الحذف', 'error');
+    }
+  });
+
+  card.appendChild(header);
+
+  const swVal = m.sleeveWidthMeasurement;
+  const hasSleeveWidth = swVal && swVal > 0;
+
+  const body = document.createElement('div');
+  body.className = 'meas-card-body';
+  body.innerHTML = `
+    <div class="meas-detail-grid">
+      <div class="meas-detail-item">
+        <span class="meas-detail-label">الكتف</span>
+        <span class="meas-detail-value">${m.shoulderMeasurement || 0}<span class="meas-detail-unit"> سم</span></span>
+      </div>
+      <div class="meas-detail-item">
+        <span class="meas-detail-label">الردن</span>
+        <span class="meas-detail-value">${m.sleeveMeasurement || 0}<span class="meas-detail-unit"> سم</span></span>
+      </div>
+      <div class="meas-detail-item">
+        <span class="meas-detail-label">عرض الردن</span>
+        <span class="meas-detail-value">${hasSleeveWidth ? `${swVal}<span class="meas-detail-unit"> سم</span>` : '<span class="meas-detail-empty">—</span>'}</span>
+      </div>
+      <div class="meas-detail-item">
+        <span class="meas-detail-label">الصدر</span>
+        <span class="meas-detail-value">${m.chestMeasurement || 0}<span class="meas-detail-unit"> سم</span></span>
+      </div>
+      <div class="meas-detail-item">
+        <span class="meas-detail-label">الطول</span>
+        <span class="meas-detail-value">${m.lengthMeasurement || 0}<span class="meas-detail-unit"> سم</span></span>
+      </div>
+      <div class="meas-detail-item">
+        <span class="meas-detail-label">الياخة</span>
+        <span class="meas-detail-value">${m.neckMeasurement || 0}<span class="meas-detail-unit"> سم</span></span>
+      </div>
+    </div>
+    ${waLink ? `<a class="meas-wa-btn" href="${waLink}" target="_blank">📱 واتساب</a>` : ''}
+  `;
+  card.appendChild(body);
+  return card;
+}
+
+// --- Drawer ---
+function openMeasDrawer(m) {
+  measEditingId = m ? m.id : null;
+  const title = document.getElementById('meas-drawer-title');
+  const saveBtn = document.getElementById('meas-save-btn');
+  if (title) title.textContent = m ? 'تعديل القياس' : 'إضافة قياس';
+  if (saveBtn) { saveBtn.textContent = m ? 'حفظ التعديلات' : 'إضافة القياس'; saveBtn.disabled = false; }
+
+  document.getElementById('meas-customerName').value = m ? m.customerName || '' : '';
+  document.getElementById('meas-fileNumber').value = m ? m.fileNumber || '' : '';
+  document.getElementById('meas-designType').value = m ? m.designType || '' : '';
+  document.getElementById('meas-whatsapp').value = m ? m.whatsappNumber || '' : '+964';
+  document.getElementById('meas-shoulder').value = m ? m.shoulderMeasurement || '' : '';
+  document.getElementById('meas-sleeve').value = m ? m.sleeveMeasurement || '' : '';
+  document.getElementById('meas-sleeveWidth').value = m ? m.sleeveWidthMeasurement || '' : '';
+  document.getElementById('meas-chest').value = m ? m.chestMeasurement || '' : '';
+  document.getElementById('meas-length').value = m ? m.lengthMeasurement || '' : '';
+  document.getElementById('meas-neck').value = m ? m.neckMeasurement || '' : '';
+
+  document.getElementById('meas-drawer').classList.add('show');
+  document.getElementById('meas-drawer-backdrop').classList.add('show');
+  document.body.classList.add('edit-drawer-open');
+}
+
+function closeMeasDrawer() {
+  document.getElementById('meas-drawer')?.classList.remove('show');
+  document.getElementById('meas-drawer-backdrop')?.classList.remove('show');
+  document.body.classList.remove('edit-drawer-open');
+  measEditingId = null;
+}
+
+async function saveMeasurement() {
+  const customerName = document.getElementById('meas-customerName').value.trim();
+  const fileNumber = document.getElementById('meas-fileNumber').value.trim();
+  const shoulder = parseInt(document.getElementById('meas-shoulder').value);
+  const sleeve = parseInt(document.getElementById('meas-sleeve').value);
+  const sleeveWidth = parseInt(document.getElementById('meas-sleeveWidth').value);
+  const chest = parseInt(document.getElementById('meas-chest').value);
+  const length = parseInt(document.getElementById('meas-length').value);
+  const neck = parseInt(document.getElementById('meas-neck').value);
+
+  if (!customerName || !fileNumber || isNaN(shoulder) || isNaN(sleeve) || isNaN(chest) || isNaN(length) || isNaN(neck)) {
+    showToast('أكمل جميع الحقول المطلوبة', 'error');
+    return;
+  }
+
+  const data = {
+    customerName,
+    fileNumber,
+    designType: document.getElementById('meas-designType').value.trim(),
+    whatsappNumber: document.getElementById('meas-whatsapp').value.trim(),
+    shoulderMeasurement: shoulder,
+    sleeveMeasurement: sleeve,
+    sleeveWidthMeasurement: isNaN(sleeveWidth) ? 0 : sleeveWidth,
+    chestMeasurement: chest,
+    lengthMeasurement: length,
+    neckMeasurement: neck,
+    updatedAt: serverTimestamp()
+  };
+
+  const saveBtn = document.getElementById('meas-save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جارٍ الحفظ...';
+
+  try {
+    if (measEditingId) {
+      await updateDoc(doc(db, 'measurements', measEditingId), data);
+      const idx = allMeasurements.findIndex(m => m.id === measEditingId);
+      if (idx >= 0) allMeasurements[idx] = { ...allMeasurements[idx], ...data };
+      showToast('تم تعديل القياس', 'success');
+    } else {
+      data.createdAt = serverTimestamp();
+      const newDoc = await addDoc(collection(db, 'measurements'), data);
+      allMeasurements.unshift({ id: newDoc.id, ...data });
+      showToast('تم إضافة القياس', 'success');
+    }
+    renderMeasStats();
+    renderMeasList();
+    setTimeout(closeMeasDrawer, 300);
+  } catch (err) {
+    console.error(err);
+    showToast('حدث خطأ', 'error');
+    saveBtn.disabled = false;
+    saveBtn.textContent = measEditingId ? 'حفظ التعديلات' : 'إضافة القياس';
+  }
+}
+
+// --- Print ---
+function printMeasurements() {
+  const items = measSearchMode === 'text' ? getFilteredMeasurements() : allMeasurements;
+  if (items.length === 0) { showToast('لا توجد بيانات للطباعة', 'error'); return; }
+
+  let overlay = document.querySelector('.meas-print-overlay');
+  if (overlay) overlay.remove();
+
+  overlay = document.createElement('div');
+  overlay.className = 'meas-print-overlay';
+  overlay.style.display = 'none';
+
+  let rows = '';
+  items.forEach(m => {
+    const sw = m.sleeveWidthMeasurement && m.sleeveWidthMeasurement > 0 ? m.sleeveWidthMeasurement : '—';
+    rows += `<tr>
+      <td>${escapeHtml(m.customerName)}</td>
+      <td>${escapeHtml(m.fileNumber)}</td>
+      <td>${escapeHtml(m.designType || '')}</td>
+      <td dir="ltr">${escapeHtml(m.whatsappNumber || '')}</td>
+      <td>${m.shoulderMeasurement || 0}</td>
+      <td>${m.sleeveMeasurement || 0}</td>
+      <td>${sw}</td>
+      <td>${m.chestMeasurement || 0}</td>
+      <td>${m.lengthMeasurement || 0}</td>
+      <td>${m.neckMeasurement || 0}</td>
+    </tr>`;
+  });
+
+  overlay.innerHTML = `
+    <h2>سجل القياسات — شاكر للدشاديش (${items.length} سجل)</h2>
+    <table class="meas-print-table">
+      <thead>
+        <tr>
+          <th>الاسم</th><th>رقم الملف</th><th>التصميم</th><th>واتساب</th>
+          <th>الكتف</th><th>الردن</th><th>عرض الردن</th><th>الصدر</th><th>الطول</th><th>الياخة</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  document.body.appendChild(overlay);
+  window.print();
+  setTimeout(() => overlay.remove(), 1000);
+}
+
+// --- Event Listeners ---
+(function initMeasurements() {
+  const addBtn = document.getElementById('meas-add-btn');
+  const saveBtn = document.getElementById('meas-save-btn');
+  const closeBtn = document.getElementById('meas-drawer-close');
+  const backdrop = document.getElementById('meas-drawer-backdrop');
+  const searchInput = document.getElementById('meas-search-input');
+  const searchBtn = document.getElementById('meas-search-btn');
+  const printBtn = document.getElementById('meas-print-btn');
+
+  if (addBtn) addBtn.addEventListener('click', () => openMeasDrawer(null));
+  if (saveBtn) saveBtn.addEventListener('click', saveMeasurement);
+  if (closeBtn) closeBtn.addEventListener('click', closeMeasDrawer);
+  if (backdrop) backdrop.addEventListener('click', closeMeasDrawer);
+
+  if (searchInput) searchInput.addEventListener('input', () => {
+    if (measSearchMode === 'text') renderMeasList();
+  });
+
+  // Search mode toggle
+  document.querySelectorAll('[data-search-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-search-mode]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      measSearchMode = btn.dataset.searchMode;
+      const textDiv = document.getElementById('meas-text-search');
+      const measDiv = document.getElementById('meas-measurement-search');
+      if (textDiv) textDiv.style.display = measSearchMode === 'text' ? '' : 'none';
+      if (measDiv) measDiv.style.display = measSearchMode === 'measurement' ? '' : 'none';
+      if (measSearchMode === 'text') renderMeasList();
+    });
+  });
+
+  // Tolerance toggle
+  document.querySelectorAll('[data-tolerance]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-tolerance]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      measTolerance = parseInt(btn.dataset.tolerance);
+    });
+  });
+
+  if (searchBtn) searchBtn.addEventListener('click', searchByMeasurements);
+
+  if (printBtn) printBtn.addEventListener('click', printMeasurements);
+
+  // Escape key for drawer
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const measDrawer = document.getElementById('meas-drawer');
+      if (measDrawer && measDrawer.classList.contains('show')) closeMeasDrawer();
+    }
+  });
+})();

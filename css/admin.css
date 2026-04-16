@@ -2740,3 +2740,414 @@ body.edit-drawer-open {
     height: 40px;
   }
 }
+
+/* ========================================
+   Measurements View (القياسات)
+   ======================================== */
+.measurements-view {
+  display: none;
+  min-height: calc(100vh - 64px);
+}
+.measurements-view.visible {
+  display: block;
+}
+.measurements-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Stats Cards */
+.meas-stats-cards {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.meas-stat-card {
+  flex: 1;
+  min-width: 90px;
+  background: #fff;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: 1rem 0.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: var(--shadow);
+}
+.meas-stat-card .stat-count {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+.meas-stat-card .stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+}
+
+/* Search Mode */
+.meas-search-mode {
+  margin-bottom: 1rem;
+}
+.meas-text-search {
+  margin-bottom: 1rem;
+}
+
+/* Measurement Search Grid */
+.meas-measurement-search {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+.meas-search-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.meas-search-field label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--navy);
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.meas-search-field input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.9rem;
+  text-align: center;
+  outline: none;
+  box-sizing: border-box;
+}
+.meas-search-field input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+.meas-tolerance-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.meas-tolerance-row > label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+.meas-search-btn {
+  margin-right: auto;
+}
+
+/* Action Bar */
+.meas-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.meas-io-btns {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.meas-io-btn {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+.meas-io-btn:hover {
+  border-color: var(--gold);
+  background: rgba(201,168,76,0.06);
+}
+
+/* Measurement List */
+.meas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Measurement Card */
+.meas-card {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: box-shadow var(--transition);
+}
+.meas-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+.meas-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  cursor: pointer;
+  user-select: none;
+}
+.meas-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.meas-card-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.meas-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  color: #888;
+}
+.meas-file-badge {
+  background: var(--cream-dark);
+  padding: 1px 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.78rem;
+  direction: ltr;
+}
+.meas-design-badge {
+  background: rgba(201,168,76,0.12);
+  color: #8b7025;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.meas-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+.meas-card-actions button {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all var(--transition);
+}
+.meas-card-actions .meas-edit-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.meas-card-actions .meas-delete-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-light);
+}
+.meas-expand-icon {
+  color: #ccc;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+  font-size: 0.8rem;
+}
+.meas-card.expanded .meas-expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Card Body (expandable) */
+.meas-card-body {
+  display: none;
+  padding: 0.75rem 1.1rem 1rem;
+  border-top: 1px solid var(--cream-dark);
+}
+.meas-card.expanded .meas-card-body {
+  display: block;
+}
+
+/* Measurement Detail Grid */
+.meas-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.6rem;
+}
+.meas-detail-item {
+  text-align: center;
+  background: var(--cream);
+  border-radius: 8px;
+  padding: 0.5rem 0.25rem;
+}
+.meas-detail-label {
+  font-size: 0.7rem;
+  color: #999;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+.meas-detail-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.meas-detail-unit {
+  font-size: 0.65rem;
+  color: #888;
+}
+.meas-detail-empty {
+  color: #ccc;
+  font-size: 0.9rem;
+}
+
+/* WhatsApp Button */
+.meas-wa-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: #25D366;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-family: 'Cairo', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.75rem;
+  text-decoration: none;
+  transition: background var(--transition);
+}
+.meas-wa-btn:hover {
+  background: #1ea952;
+}
+
+/* Drawer form grid */
+.meas-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* Empty state */
+.meas-empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #999;
+  font-size: 1rem;
+}
+
+/* Print Styles */
+@media print {
+  body > *:not(.meas-print-overlay) {
+    display: none !important;
+  }
+  .meas-print-overlay {
+    display: block !important;
+    position: static;
+    padding: 1rem;
+  }
+  .meas-print-overlay h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+    font-family: 'Cairo', sans-serif;
+  }
+  .meas-print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.8rem;
+    direction: rtl;
+  }
+  .meas-print-table th,
+  .meas-print-table td {
+    padding: 6px 8px;
+    border: 1px solid #333;
+    text-align: center;
+  }
+  .meas-print-table th {
+    background: #0B1C3D;
+    color: #fff;
+    font-weight: 700;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Responsive — Measurements */
+@media (max-width: 700px) {
+  .measurements-main {
+    padding: 1rem;
+  }
+  .meas-search-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .meas-detail-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .meas-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .meas-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .meas-io-btns {
+    justify-content: center;
+  }
+  .meas-tolerance-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .meas-tolerance-row .orders-type-filter {
+    width: 100%;
+  }
+  .meas-tolerance-row .type-filter-btn {
+    flex: 1;
+  }
+  .meas-search-btn {
+    width: 100%;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .meas-search-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .meas-detail-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .meas-card-name {
+    font-size: 0.95rem;
+  }
+  .meas-stat-card .stat-count {
+    font-size: 1.4rem;
+  }
+}
