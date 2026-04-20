@@ -75,12 +75,18 @@ The public site uses the **Firestore REST API** — no SDK needed for `index.htm
 ### 3. Firestore Security Rules
 > **IMPORTANT:** The `orders` collection MUST have a `create` rule allowing public writes,
 > otherwise customer orders from the public site will silently fail (no auth on public site).
+> The `images` collection MUST allow public updates to the `quantity` field only,
+> so stock decrements work when customers place orders (no auth on public site).
 ```
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /sections/{id} { allow read; allow write: if request.auth != null; }
-    match /images/{id}   { allow read; allow write: if request.auth != null; }
+    match /images/{id}   {
+      allow read;
+      allow write: if request.auth != null;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity']);
+    }
     match /orders/{id}   { allow create; allow read, update, delete: if request.auth != null; }
   }
 }

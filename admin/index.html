@@ -222,54 +222,56 @@
           </div>
         </div>
 
-        <!-- Search Mode Toggle -->
-        <div class="meas-search-mode">
-          <div class="orders-type-filter" role="tablist">
-            <button class="type-filter-btn active" data-search-mode="text">بحث نصي</button>
-            <button class="type-filter-btn" data-search-mode="measurement">بحث بالقياسات</button>
-          </div>
-        </div>
-
-        <!-- Text Search Bar -->
-        <div id="meas-text-search" class="meas-text-search">
-          <input type="search" class="orders-search" id="meas-search-input" placeholder="بحث بالاسم أو رقم الملف أو رقم الهاتف..." />
-        </div>
-
-        <!-- Measurement Search -->
-        <div id="meas-measurement-search" class="meas-measurement-search" style="display:none;">
-          <div class="meas-search-grid">
-            <div class="meas-search-field">
-              <label>الكتف</label>
-              <input type="number" id="search-shoulder" inputmode="numeric" placeholder="سم" />
-            </div>
-            <div class="meas-search-field">
-              <label>الردن</label>
-              <input type="number" id="search-sleeve" inputmode="numeric" placeholder="سم" />
-            </div>
-            <div class="meas-search-field">
-              <label>عرض الردن</label>
-              <input type="number" id="search-sleeveWidth" inputmode="numeric" placeholder="سم" />
-            </div>
-            <div class="meas-search-field">
-              <label>الصدر</label>
-              <input type="number" id="search-chest" inputmode="numeric" placeholder="سم" />
-            </div>
-            <div class="meas-search-field">
-              <label>الطول</label>
-              <input type="number" id="search-length" inputmode="numeric" placeholder="سم" />
-            </div>
-            <div class="meas-search-field">
-              <label>الياخة</label>
-              <input type="number" id="search-neck" inputmode="numeric" placeholder="سم" />
+        <!-- Unified Search -->
+        <div class="meas-unified-search">
+          <!-- Text search bar - always visible -->
+          <div class="meas-text-search">
+            <div class="meas-search-wrap">
+              <svg class="meas-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="search" class="orders-search" id="meas-search-input" placeholder="بحث بالاسم أو رقم الملف أو رقم الهاتف..." />
             </div>
           </div>
-          <div class="meas-tolerance-row">
-            <label>نطاق البحث:</label>
-            <div class="orders-type-filter" role="tablist">
-              <button class="type-filter-btn active" data-tolerance="2">فارق ± 2</button>
-              <button class="type-filter-btn" data-tolerance="4">فارق ± 4</button>
+
+          <!-- Measurement filter toggle -->
+          <button class="meas-filter-toggle" id="meas-filter-toggle" type="button">
+            <span class="meas-filter-toggle-text">تصفية بالقياسات</span>
+            <span class="meas-filter-toggle-icon">▼</span>
+            <span class="meas-filter-active-count" id="meas-filter-count" style="display:none"></span>
+          </button>
+
+          <!-- Expandable measurement panel -->
+          <div class="meas-filter-panel" id="meas-filter-panel">
+            <div class="meas-filter-panel-inner">
+              <div class="meas-search-grid">
+                <div class="meas-search-field">
+                  <label>الكتف</label>
+                  <input type="number" id="search-shoulder" inputmode="numeric" placeholder="سم" />
+                </div>
+                <div class="meas-search-field">
+                  <label>الردن</label>
+                  <input type="number" id="search-sleeve" inputmode="numeric" placeholder="سم" />
+                </div>
+                <div class="meas-search-field">
+                  <label>عرض الردن</label>
+                  <input type="number" id="search-sleeveWidth" inputmode="numeric" placeholder="سم" />
+                </div>
+                <div class="meas-search-field">
+                  <label>الصدر</label>
+                  <input type="number" id="search-chest" inputmode="numeric" placeholder="سم" />
+                </div>
+                <div class="meas-search-field">
+                  <label>الطول</label>
+                  <input type="number" id="search-length" inputmode="numeric" placeholder="سم" />
+                </div>
+                <div class="meas-search-field">
+                  <label>الياخة</label>
+                  <input type="number" id="search-neck" inputmode="numeric" placeholder="سم" />
+                </div>
+              </div>
+              <div class="meas-filter-actions">
+                <button class="meas-filter-clear" id="meas-filter-clear" type="button">مسح القياسات</button>
+              </div>
             </div>
-            <button class="btn-add meas-search-btn" id="meas-search-btn">بحث</button>
           </div>
         </div>
 

@@ -2071,8 +2071,11 @@ function escapeHtml(str) {
 // Measurements Section (القياسات)
 // =============================================
 let allMeasurements = [];
-let measSearchMode = 'text';
-let measTolerance = 2;
+let measFilterTimer = null;
+function debounceMeasFilter() {
+  clearTimeout(measFilterTimer);
+  measFilterTimer = setTimeout(() => renderMeasList(), 200);
+}
 let measEditingId = null;
 let measLoaded = false;
 
@@ -2109,47 +2112,64 @@ function renderMeasStats() {
 
 // --- Filter ---
 function getFilteredMeasurements() {
+  let items = allMeasurements;
+
+  // Text filter
   const q = (document.getElementById('meas-search-input')?.value || '').trim().toLowerCase();
-  if (!q) return allMeasurements;
-  return allMeasurements.filter(m =>
-    (m.customerName || '').toLowerCase().includes(q) ||
-    (m.fileNumber || '').toLowerCase().includes(q) ||
-    (m.whatsappNumber || '').includes(q) ||
-    (m.designType || '').toLowerCase().includes(q)
-  );
+  if (q) {
+    items = items.filter(m =>
+      (m.customerName || '').toLowerCase().includes(q) ||
+      (m.fileNumber || '').toLowerCase().includes(q) ||
+      (m.whatsappNumber || '').includes(q) ||
+      (m.designType || '').toLowerCase().includes(q)
+    );
+  }
+
+  // Measurement filter — sort by closest match
+  const shoulder  = parseFloat(document.getElementById('search-shoulder')?.value);
+  const sleeve    = parseFloat(document.getElementById('search-sleeve')?.value);
+  const sleeveW   = parseFloat(document.getElementById('search-sleeveWidth')?.value);
+  const chest     = parseFloat(document.getElementById('search-chest')?.value);
+  const length    = parseFloat(document.getElementById('search-length')?.value);
+  const neck      = parseFloat(document.getElementById('search-neck')?.value);
+
+  const measFilters = [
+    { val: shoulder, key: 'shoulderMeasurement' },
+    { val: sleeve,   key: 'sleeveMeasurement' },
+    { val: sleeveW,  key: 'sleeveWidthMeasurement' },
+    { val: chest,    key: 'chestMeasurement' },
+    { val: length,   key: 'lengthMeasurement' },
+    { val: neck,     key: 'neckMeasurement' },
+  ].filter(f => !isNaN(f.val));
+
+  if (measFilters.length > 0) {
+    items = items.map(m => {
+      const totalDiff = measFilters.reduce((sum, f) => sum + Math.abs((m[f.key] || 0) - f.val), 0);
+      return { ...m, _matchDiff: totalDiff };
+    }).sort((a, b) => a._matchDiff - b._matchDiff);
+  }
+
+  updateFilterBadge(measFilters.length);
+  return items;
 }
 
-function searchByMeasurements() {
-  const shoulder = parseInt(document.getElementById('search-shoulder')?.value);
-  const sleeve = parseInt(document.getElementById('search-sleeve')?.value);
-  const sleeveWidth = parseInt(document.getElementById('search-sleeveWidth')?.value);
-  const chest = parseInt(document.getElementById('search-chest')?.value);
-  const length = parseInt(document.getElementById('search-length')?.value);
-  const neck = parseInt(document.getElementById('search-neck')?.value);
-  const tol = measTolerance;
-
-  const hasAny = [shoulder, sleeve, sleeveWidth, chest, length, neck].some(v => !isNaN(v));
-  if (!hasAny) { showToast('أدخل قياس واحد على الأقل', 'error'); return; }
-
-  const results = allMeasurements.filter(m => {
-    if (!isNaN(shoulder) && Math.abs((m.shoulderMeasurement || 0) - shoulder) > tol) return false;
-    if (!isNaN(sleeve) && Math.abs((m.sleeveMeasurement || 0) - sleeve) > tol) return false;
-    if (!isNaN(sleeveWidth) && m.sleeveWidthMeasurement && Math.abs(m.sleeveWidthMeasurement - sleeveWidth) > tol) return false;
-    if (!isNaN(chest) && Math.abs((m.chestMeasurement || 0) - chest) > tol) return false;
-    if (!isNaN(length) && Math.abs((m.lengthMeasurement || 0) - length) > tol) return false;
-    if (!isNaN(neck) && Math.abs((m.neckMeasurement || 0) - neck) > tol) return false;
-    return true;
-  });
-
-  renderMeasList(results);
-  showToast(`تم العثور على ${results.length} نتيجة`, results.length > 0 ? 'success' : 'error');
+function updateFilterBadge(activeCount) {
+  const badge = document.getElementById('meas-filter-count');
+  const panel = document.getElementById('meas-filter-panel');
+  if (!badge) return;
+  if (activeCount > 0 && !panel?.classList.contains('open')) {
+    badge.textContent = activeCount;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
 }
 
 // --- Render List ---
 function renderMeasList(data) {
   const list = document.getElementById('meas-list');
   if (!list) return;
-  const items = data || (measSearchMode === 'text' ? getFilteredMeasurements() : allMeasurements);
+  const items = data || getFilteredMeasurements();
 
   if (items.length === 0) {
     list.innerHTML = '<div class="meas-empty">لا توجد قياسات</div>';
@@ -2337,7 +2357,7 @@ async function saveMeasurement() {
 
 // --- Print ---
 function printMeasurements() {
-  const items = measSearchMode === 'text' ? getFilteredMeasurements() : allMeasurements;
+  const items = getFilteredMeasurements();
   if (items.length === 0) { showToast('لا توجد بيانات للطباعة', 'error'); return; }
 
   let overlay = document.querySelector('.meas-print-overlay');
@@ -2389,7 +2409,6 @@ function printMeasurements() {
   const closeBtn = document.getElementById('meas-drawer-close');
   const backdrop = document.getElementById('meas-drawer-backdrop');
   const searchInput = document.getElementById('meas-search-input');
-  const searchBtn = document.getElementById('meas-search-btn');
   const printBtn = document.getElementById('meas-print-btn');
 
   if (addBtn) addBtn.addEventListener('click', () => openMeasDrawer(null));
@@ -2397,34 +2416,36 @@ function printMeasurements() {
   if (closeBtn) closeBtn.addEventListener('click', closeMeasDrawer);
   if (backdrop) backdrop.addEventListener('click', closeMeasDrawer);
 
-  if (searchInput) searchInput.addEventListener('input', () => {
-    if (measSearchMode === 'text') renderMeasList();
+  // Text search — live filter
+  if (searchInput) searchInput.addEventListener('input', () => renderMeasList());
+
+  // Measurement inputs — live filter with debounce
+  document.querySelectorAll('.meas-search-grid input').forEach(inp => {
+    inp.addEventListener('input', debounceMeasFilter);
   });
 
-  // Search mode toggle
-  document.querySelectorAll('[data-search-mode]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-search-mode]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      measSearchMode = btn.dataset.searchMode;
-      const textDiv = document.getElementById('meas-text-search');
-      const measDiv = document.getElementById('meas-measurement-search');
-      if (textDiv) textDiv.style.display = measSearchMode === 'text' ? '' : 'none';
-      if (measDiv) measDiv.style.display = measSearchMode === 'measurement' ? '' : 'none';
-      if (measSearchMode === 'text') renderMeasList();
+  // Toggle measurement filter panel
+  const filterToggle = document.getElementById('meas-filter-toggle');
+  const filterPanel = document.getElementById('meas-filter-panel');
+  if (filterToggle && filterPanel) {
+    filterToggle.addEventListener('click', () => {
+      filterToggle.classList.toggle('active');
+      filterPanel.classList.toggle('open');
+      updateFilterBadge(
+        [...document.querySelectorAll('.meas-search-grid input')].filter(i => i.value).length
+      );
     });
-  });
+  }
 
-  // Tolerance toggle
-  document.querySelectorAll('[data-tolerance]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-tolerance]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      measTolerance = parseInt(btn.dataset.tolerance);
+  // Clear measurement filters
+  const filterClear = document.getElementById('meas-filter-clear');
+  if (filterClear) {
+    filterClear.addEventListener('click', () => {
+      document.querySelectorAll('.meas-search-grid input').forEach(inp => { inp.value = ''; });
+      renderMeasList();
     });
-  });
+  }
 
-  if (searchBtn) searchBtn.addEventListener('click', searchByMeasurements);
 
   if (printBtn) printBtn.addEventListener('click', printMeasurements);
 
